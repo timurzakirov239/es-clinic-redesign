@@ -39,6 +39,19 @@
   backdrop-filter: blur(12px) saturate(135%);
 }
 
+.staticPanel {
+  opacity: 0;
+  transform: translateY(42px);
+  transition:
+    opacity .7s ease var(--reveal-delay, 0ms),
+    transform .8s cubic-bezier(.22, 1, .36, 1) var(--reveal-delay, 0ms);
+}
+
+.staticPanel[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .panelHeading {
   display: flex;
   align-items: center;
@@ -146,4 +159,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .panelExpand, .panelDetails { transition: none; }
+  .staticPanel { opacity: 1; transform: none; transition: none; }
 }

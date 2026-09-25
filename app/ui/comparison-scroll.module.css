@@ -51,7 +51,6 @@
   position: relative;
   transform: rotate(var(--pile-rotation, -1.4deg));
   transition: transform .45s cubic-bezier(.2, .8, .2, 1);
-  will-change: transform;
 }
 
 .pair:nth-child(2n) .stack { --pile-rotation: 1.2deg; }
@@ -152,43 +151,132 @@
 .beforeCard p { max-width: 34ch; color: #76695d; font-size: clamp(15px, 1.05vw, 18px); line-height: 1.32; }
 .afterCard p { max-width: 39ch; padding-right: 15px; font-size: clamp(16px, 1.18vw, 21px); line-height: 1.28; letter-spacing: -.018em; }
 
+/* Mobile-only toggle. */
+.compareToggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #2b2115;
+  cursor: pointer;
+}
+
+.compareToggleIcon {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(83, 62, 45, 0.18);
+  border-radius: 50%;
+  background: rgba(83, 62, 45, 0.08);
+  font: 22px/1 Arial, sans-serif;
+  transition: transform .35s cubic-bezier(.22, 1, .36, 1), background .3s ease;
+}
+
+.compareToggle:hover .compareToggleIcon { background: rgba(83, 62, 45, 0.14); }
+.pair[data-comparing="true"] .compareToggleIcon { transform: rotate(45deg); }
+.compareToggle:focus-visible { outline: 2px solid #533e2d; outline-offset: 2px; border-radius: 50%; }
+
+@media (min-width: 761px) {
+  .compareToggle { display: none; }
+}
+
 @keyframes card-appear {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 @media (max-width: 760px) {
-  .cards { grid-template-columns: minmax(0, 1fr); row-gap: 20px; }
-  .upperCards .pair,
-  .lowerCards .pair,
-  .upperCards .pair:nth-child(4),
-  .lowerCards .pair:nth-child(1),
-  .lowerCards .pair:nth-child(2),
-  .lowerCards .pair:nth-child(3) { grid-column: 1; width: 100%; justify-self: stretch; padding-inline: 0; }
-  .pair { animation: none; }
-  .stack,
-  .pair[data-revealed="true"] .stack { display: block; transform: none; transition: none; }
-  .beforeCard { min-height: 148px; padding: 17px 19px 62px; }
-  .afterCard,
-  .pair[data-revealed="true"] .afterCard {
-    min-height: 164px;
-    margin-top: -48px;
-    padding: 17px 19px 48px;
-    border-color: #fff8e7d9;
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-    overflow: visible;
-    pointer-events: auto;
+  /* Single-column grid for both upper and lower sections. */
+  .cards { grid-template-columns: minmax(0, 1fr); row-gap: 22px; }
+
+  /* Force every pair to full width of the single column. */
+  .cards > .pair,
+  .cards > .pair:nth-child(n) {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-self: stretch;
+    padding-inline: 0;
+    padding-top: 0;
+    animation: none;
+    transition: padding-top .7s cubic-bezier(.22, 1, .36, 1);
+  }
+
+  /* Tighter gap between the section title and the first pair. */
+  .stickyView > :global(.intro-title) {
+    margin-bottom: clamp(20px, 4vh, 32px);
+  }
+
+  /* Keep the gap between the upper and lower groups identical to the
+     row-gap used between pairs within each group. */
+  .lowerCards { margin-top: 22px; }
+
+  /* Stack stays a grid, both cards share the same cell. */
+  .cards > .pair .stack,
+  .cards > .pair[data-revealed="true"] .stack {
+    display: grid;
+    transform: none;
     transition: none;
   }
-  .beforeCard .cardHeading,
-  .afterCard .cardHeading { margin-bottom: 12px; font-size: 10px; }
-  .beforeCard p { font-size: 16px; line-height: 1.38; }
-  .afterCard p { font-size: 17px; line-height: 1.38; }
+
+  .cards > .pair .beforeCard {
+    grid-area: 1 / 1;
+    z-index: 0;
+    min-height: 148px;
+    padding: 17px 19px 62px;
+    transition: transform .7s cubic-bezier(.22, 1, .36, 1);
+  }
+
+  /* Reveal: the "after" card slides in from the right. */
+  .cards > .pair .afterCard {
+    grid-area: 1 / 1;
+    z-index: 1;
+    min-height: 100%;
+    padding: 17px 19px 48px;
+    border-color: #fff8e7d9;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(40px) scale(.98);
+    transition:
+      opacity .55s ease,
+      transform .7s cubic-bezier(.22, 1, .36, 1),
+      visibility 0s linear .7s;
+  }
+  .cards > .pair[data-revealed="true"] .afterCard {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0) scale(1);
+    transition-delay: 0s;
+  }
+
+  /* Comparing: "before" slides up only enough to keep the two cards
+     visually joined — the bottom ~32px stays tucked behind "after". */
+  .cards > .pair[data-comparing="true"] {
+    padding-top: calc(var(--before-h, 180px) - 32px);
+  }
+  .cards > .pair[data-comparing="true"] .beforeCard {
+    transform: translateY(calc(-1 * (var(--before-h, 180px) - 32px)));
+  }
+
+  .cards > .pair .beforeCard .cardHeading,
+  .cards > .pair .afterCard .cardHeading { margin-bottom: 12px; font-size: 10px; }
+  .cards > .pair .beforeCard p { font-size: 16px; line-height: 1.38; }
+  .cards > .pair .afterCard p { font-size: 17px; line-height: 1.38; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .pair { animation: none; }
-  .beforeCard, .afterCard, .pair[data-revealed="true"] .afterCard { transition: none; transform: none; }
+  .beforeCard,
+  .afterCard,
+  .pair[data-revealed="true"] .afterCard { transition: none; transform: none; }
+  .pair[data-comparing="true"] .beforeCard { transform: none; }
 }

@@ -5,16 +5,40 @@ import Image from "next/image";
 import styles from "./comparison-scroll.module.css";
 
 function ScrollPairCard({ item, answer, index, revealed }) {
+  const [comparing, setComparing] = useState(false);
+  const [beforeHeight, setBeforeHeight] = useState(0);
+  const beforeRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const el = beforeRef.current;
+    if (!el) return;
+    const measure = () => setBeforeHeight(el.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  const toggle = (event) => {
+    event.stopPropagation();
+    setComparing((value) => !value);
+  };
+
   return (
     <article
       className={styles.pair}
       data-revealed={revealed}
+      data-comparing={comparing}
       data-reveal-trigger={index === 0 ? "" : undefined}
-      style={{ "--card-index": index }}
+      style={{ "--card-index": index, "--before-h": `${beforeHeight}px` }}
       aria-label={`Сравнение ${index + 1}`}
     >
       <div className={styles.stack}>
-        <div className={styles.beforeCard}>
+        <div className={styles.beforeCard} ref={beforeRef}>
           <div className={styles.cardHeading}><span>Самостоятельно</span></div>
           <p>{item}</p>
         </div>
@@ -24,6 +48,15 @@ function ScrollPairCard({ item, answer, index, revealed }) {
             <span>С ЕС Клиникой</span>
           </div>
           <p>{answer}</p>
+          <button
+            type="button"
+            className={styles.compareToggle}
+            aria-label={comparing ? "Свернуть сравнение" : "Показать сравнение"}
+            aria-expanded={comparing}
+            onClick={toggle}
+          >
+            <span className={styles.compareToggleIcon} aria-hidden="true">+</span>
+          </button>
         </div>
       </div>
     </article>
@@ -47,8 +80,7 @@ export function ScrollComparisonReveal({ before, after, heading }) {
       setRevealedCount(before.length);
     };
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const mobile = window.matchMedia("(max-width: 760px)");
-    if (motion.matches || mobile.matches) showAll();
+    if (motion.matches) showAll();
 
     let timer = 0;
     let count = 0;
@@ -62,7 +94,7 @@ export function ScrollComparisonReveal({ before, after, heading }) {
     const observer = new IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return;
       observer.disconnect();
-      if (motion.matches || mobile.matches) {
+      if (motion.matches) {
         showAll();
         return;
       }

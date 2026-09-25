@@ -30,25 +30,144 @@ function groupTitle(group, index) {
   return `${index + 1}. ${copy[group.title].replace(/^\d+\.\s*/, "").replace(/\s*\n\s*/g, " ")}`;
 }
 
+// Mobile panel: opens automatically when it scrolls into view (with the text
+// already expanded). A corner × button closes it. After a manual close the
+// panel is "locked" — the IntersectionObserver will not reopen it, only a
+// second click on the button does.
 function ContractGroup({ group, index }) {
   const [expanded, setExpanded] = useState(false);
   const contentId = useId();
   const title = groupTitle(group, index);
+  const ref = useRef(null);
+  const lockedRef = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (motion.matches) {
+      setExpanded(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          observer.unobserve(entry.target);
+          if (lockedRef.current) return;
+          setExpanded(true);
+        });
+      },
+      { threshold: REVEAL_THRESHOLD, rootMargin: REVEAL_ROOT_MARGIN }
+    );
+    observer.observe(el);
+
+    const onMotionChange = () => {
+      if (motion.matches) {
+        observer.disconnect();
+        setExpanded(true);
+      }
+    };
+    motion.addEventListener("change", onMotionChange);
+
+    return () => {
+      observer.disconnect();
+      motion.removeEventListener("change", onMotionChange);
+    };
+  }, []);
+
+  const handleToggle = (event) => {
+    event.stopPropagation();
+    if (expanded) {
+      setExpanded(false);
+      lockedRef.current = true;
+    } else {
+      setExpanded(true);
+    }
+  };
 
   return (
     <article
+      ref={ref}
       className={styles.panel}
       data-contract-panel={index + 1}
       data-expanded={expanded}
     >
+      <div className={`${styles.panelHeading} ${styles.staticHeading}`}>
+        <h3>{title}</h3>
+      </div>
       <button
-        className={styles.panelHeading}
         type="button"
+        className={styles.panelClose}
+        aria-label={expanded ? "Свернуть" : "Развернуть"}
         aria-expanded={expanded}
         aria-controls={contentId}
-        onClick={() => setExpanded((value) => !value)}
+        onClick={handleToggle}
       >
+        <span className={styles.panelExpand} aria-hidden="true">+</span>
+      </button>
+      <div className={styles.panelDetails} id={contentId} aria-hidden={!expanded} inert={!expanded}>
+        <div className={styles.panelDetailsInner}>
+          <div className={styles.services}>
+            {group.items.map((ids) => <Service ids={ids} key={ids[0]} />)}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// Desktop panel: the title fades in on scroll (handled by the parent's
+// IntersectionObserver). Hovering the panel opens the text; it then stays
+// open until the corner close (×) button is clicked — hover leaving does
+// nothing. After the first close via the button, the panel is "locked":
+// hover no longer opens it, only a click on the button does.
+function DesktopContractPanel({ group, index }) {
+  const [expanded, setExpanded] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const contentId = useId();
+  const title = groupTitle(group, index);
+
+  const handleMouseEnter = () => {
+    if (!locked) setExpanded(true);
+  };
+
+  const handleFocus = () => {
+    if (!locked) setExpanded(true);
+  };
+
+  const handleToggle = (event) => {
+    event.stopPropagation();
+    if (expanded) {
+      setExpanded(false);
+      setLocked(true);
+    } else {
+      setExpanded(true);
+    }
+  };
+
+  return (
+    <article
+      className={`${styles.panel} ${styles.staticPanel}`}
+      data-visible="false"
+      data-expanded={expanded}
+      tabIndex={0}
+      onMouseEnter={handleMouseEnter}
+      onFocus={handleFocus}
+    >
+      <div className={`${styles.panelHeading} ${styles.staticHeading}`}>
         <h3>{title}</h3>
+      </div>
+      <button
+        type="button"
+        className={styles.panelClose}
+        aria-label={expanded ? "Свернуть" : "Развернуть"}
+        aria-expanded={expanded}
+        aria-controls={contentId}
+        onClick={handleToggle}
+      >
         <span className={styles.panelExpand} aria-hidden="true">+</span>
       </button>
       <div className={styles.panelDetails} id={contentId} aria-hidden={!expanded} inert={!expanded}>
@@ -65,8 +184,8 @@ function ContractGroup({ group, index }) {
 export function ContractScrollStory({ intro }) {
   const groupsRef = useRef(null);
 
-  // Reveal the three static panels once the block scrolls into view —
-  // triggered by intersection with the viewport, not by scroll distance.
+  // Reveal each panel individually once it scrolls into view — triggered by
+  // intersection with the viewport, not by scroll distance.
   useEffect(() => {
     const container = groupsRef.current;
     if (!container) return;
@@ -116,14 +235,7 @@ export function ContractScrollStory({ intro }) {
         <div className={styles.intro}>{intro}</div>
         <div className={styles.groups} ref={groupsRef}>
           {groups.map((group, index) => (
-            <article className={`${styles.panel} ${styles.staticPanel}`} data-visible="false" key={group.title}>
-              <div className={`${styles.panelHeading} ${styles.staticHeading}`}>
-                <h3>{groupTitle(group, index)}</h3>
-              </div>
-              <div className={styles.services}>
-                {group.items.map((ids) => <Service ids={ids} key={ids[0]} />)}
-              </div>
-            </article>
+            <DesktopContractPanel group={group} index={index} key={group.title} />
           ))}
         </div>
         <div className={styles.mobileGroups}>

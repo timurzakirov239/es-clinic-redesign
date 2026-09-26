@@ -83,51 +83,12 @@ export function ScrollComparisonReveal({ before, after, heading }) {
   const lowerPairs = pairs.slice(4);
 
   const toggleComparison = (index, opening) => {
-    const root = sceneRef.current;
-    const nextActive = new Set(activeComparisons);
-    if (opening) nextActive.add(index);
-    else nextActive.delete(index);
-
-    if (root && window.matchMedia("(max-width: 750px)").matches) {
-      const pairs = [...root.querySelectorAll("[data-comparison-pair]")];
-      const liftByIndex = new Map(pairs.map((pair) => [
-        Number(pair.dataset.pairIndex),
-        Number.parseFloat(window.getComputedStyle(pair).getPropertyValue("--before-lift")) || 0,
-      ]));
-      const totalLift = [...nextActive].reduce((sum, activeIndex) => sum + (liftByIndex.get(activeIndex) ?? 0), 0);
-      const currentTotalLift = [...activeComparisons].reduce(
-        (sum, activeIndex) => sum + (liftByIndex.get(activeIndex) ?? 0),
-        0,
-      );
-      const scrollDelta = totalLift - currentTotalLift;
-      if (scrollDelta) {
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        window.scrollBy({ top: scrollDelta, behavior: reducedMotion ? "auto" : "smooth" });
-      }
-
-      pairs.forEach((pair) => {
-        const pairIndex = Number(pair.dataset.pairIndex);
-        const pairLift = liftByIndex.get(pairIndex) ?? 0;
-        const isActive = nextActive.has(pairIndex);
-        const scrollShift = isActive ? pairLift : 0;
-
-        if (scrollShift > 0) {
-          pair.style.setProperty("--comparison-scroll-shift", `${scrollShift}px`);
-          pair.setAttribute("data-scroll-shift", "");
-        } else {
-          pair.removeAttribute("data-scroll-shift");
-          pair.style.removeProperty("--comparison-scroll-shift");
-        }
-        if (isActive) {
-          pair.style.setProperty("--comparison-expand", `${pairLift}px`);
-          pair.setAttribute("data-comparing", "true");
-        } else {
-          pair.style.removeProperty("--comparison-expand");
-          pair.setAttribute("data-comparing", "false");
-        }
-      });
-    }
-    setActiveComparisons(nextActive);
+    setActiveComparisons((current) => {
+      const next = new Set(current);
+      if (opening) next.add(index);
+      else next.delete(index);
+      return next;
+    });
   };
 
   useLayoutEffect(() => {

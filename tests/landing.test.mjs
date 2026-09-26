@@ -29,7 +29,7 @@ test("current landing: content, navigation, consultation, media and responsive l
       assert.equal(await page.locator(`#${id}`).count(), 1, `Section #${id}`);
     assert.equal(await page.locator('[data-hero-version="rebuilt"]').getAttribute("data-hero-ready"), "true");
     assert.equal(videoRequests.length, 0, "Video must remain deferred before interaction");
-    assert.equal(Math.round((await page.locator(".video-card").boundingBox()).width), 336);
+    assert.equal(Math.round((await page.locator(".video-card").boundingBox()).width), 403);
 
     await page.getByRole("button", { name: "Открыть меню" }).click();
     assert.equal(await page.locator("#rebuilt-menu[open]").count(), 1);
@@ -52,7 +52,7 @@ test("current landing: content, navigation, consultation, media and responsive l
     await page.getByRole("button", { name: "Смотреть видео с Дарьей Тишиной" }).click();
     assert.ok(videoRequests.length > 0, "Video is requested after Play");
     assert.equal(await page.locator(".video-card").getAttribute("data-mode"), "engaged");
-    assert.equal(await page.locator(".video-card video").evaluate(video => video.controls), true);
+    assert.equal(await page.locator(".video-card video").evaluate(video => video.controls), false);
     await page.locator("video").evaluate(video => video.pause());
 
     await page.locator("#faq summary").first().click();
@@ -99,6 +99,63 @@ test("mobile video pauses and resumes by tapping the frame after launch", { time
     await page.locator(".video-card video").tap({ position: { x: 180, y: 280 } });
     await page.waitForFunction(() => !document.querySelector(".video-card video")?.paused);
     await page.locator(".video-card video").evaluate(video => video.pause());
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
+
+test("mobile comparison cards expand independently without scrolling the page", { timeout: 90000 }, async () => {
+  const browser = process.env.TEST_CDP
+    ? await chromium.connectOverCDP(process.env.TEST_CDP)
+    : await chromium.launch({ headless: true, executablePath: process.env.TEST_CHROME || undefined });
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+
+  const openComparison = async (pair) => {
+    await pair.scrollIntoViewIfNeeded();
+    await page.waitForFunction(element => element?.dataset.revealed === "true", await pair.elementHandle());
+    await page.waitForTimeout(650);
+    const button = pair.locator("button[aria-label='Показать сравнение']");
+    await button.scrollIntoViewIfNeeded();
+    const scrollBefore = await page.evaluate(() => window.scrollY);
+    await button.click();
+    await page.waitForFunction(element => element?.dataset.comparing === "true", await pair.elementHandle());
+    await page.waitForTimeout(650);
+    assert.equal(await page.evaluate(() => window.scrollY), scrollBefore, "Opening a card must not force page scrolling");
+  };
+
+  try {
+    await page.goto(process.env.TEST_URL || "http://127.0.0.1:4175", { waitUntil: "networkidle" });
+    const root = page.locator("[data-comparison-root]");
+    const pairs = root.locator("[data-comparison-pair]");
+    const first = pairs.nth(0);
+    const second = pairs.nth(1);
+
+    await openComparison(first);
+    await openComparison(second);
+    assert.equal(await first.getAttribute("data-comparing"), "true");
+    assert.equal(await second.getAttribute("data-comparing"), "true", "A second comparison must not close the first");
+    assert.equal(await first.locator("button").getAttribute("aria-expanded"), "true");
+    assert.equal(await second.locator("button").getAttribute("aria-expanded"), "true");
+
+    const headingBottom = await root.locator(".intro-title").evaluate(element => element.getBoundingClientRect().bottom);
+    const beforeTop = await first.locator("[data-before-card]").evaluate(element => element.getBoundingClientRect().top);
+    assert.ok(beforeTop >= headingBottom, "The first comparison must leave the title unobstructed");
+
+    const collectivePicture = root.locator("[data-after-card] p").filter({ hasText: "Команда собирает целостную картину" }).locator("xpath=../../..");
+    assert.equal(await collectivePicture.count(), 1);
+    const previousHeight = await root.evaluate(element => element.getBoundingClientRect().height);
+    await openComparison(collectivePicture);
+    assert.equal(await collectivePicture.getAttribute("data-comparing"), "true");
+    assert.ok(
+      await root.evaluate((element, height) => element.getBoundingClientRect().height > height, previousHeight),
+      "Opening the collective-picture card must expand the comparison section",
+    );
   } finally {
     await context.close();
     await browser.close();

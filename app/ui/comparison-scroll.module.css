@@ -213,10 +213,10 @@
     justify-self: stretch;
     padding-inline: 0;
     padding-top: 0;
+    margin-top: 0;
     animation: none;
     transition:
-      transform .58s cubic-bezier(.22, 1, .36, 1),
-      padding-bottom .58s cubic-bezier(.22, 1, .36, 1);
+      margin-top .58s cubic-bezier(.22, 1, .36, 1);
   }
 
   /* Tighter gap between the section title and the first pair. */
@@ -274,7 +274,7 @@
   /* Lift each "before" card just past its own text, keeping the full copy
      readable above the overlapping clinic card. */
   .cards > .pair[data-comparing="true"] {
-    padding-bottom: var(--comparison-expand, 0px);
+    margin-top: var(--before-lift, 0px);
     pointer-events: none;
   }
   .cards > .pair[data-comparing="true"] .stack {
@@ -286,9 +286,6 @@
   }
   .cards > .pair .beforeCard {
     transition: transform .58s cubic-bezier(.22, 1, .36, 1);
-  }
-  .cards > .pair[data-scroll-shift] {
-    transform: translateY(var(--comparison-scroll-shift, 0px));
   }
   .cards > .pair[data-reveal-animating] .beforeCard,
   .cards > .pair[data-reveal-animating] .afterCard {

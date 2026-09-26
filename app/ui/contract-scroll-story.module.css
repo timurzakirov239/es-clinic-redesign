@@ -184,8 +184,8 @@
       url("/assets/official-footer-building.webp");
     background-size: 100% 100%, 100% 100%, auto 100svh;
     background-position: center, center, center;
-    background-repeat: no-repeat, no-repeat, repeat-y;
-    background-attachment: scroll;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
   .content { width: 100%; padding: 96px 20px 82px; }
   .intro { margin-bottom: 30px; }

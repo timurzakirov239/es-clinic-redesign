@@ -157,10 +157,10 @@
       linear-gradient(90deg, #34333159, #47444126 72%),
       linear-gradient(180deg, #47444145, #34323038),
       url("/assets/official-footer-building.webp");
-    background-size: cover;
-    background-position: center;
+    background-size: 100% 100%, 100% 100%, auto 100svh;
+    background-position: center, center, 10% bottom;
     background-repeat: no-repeat;
-    background-attachment: fixed;
+    background-attachment: scroll, scroll, fixed;
   }
   .content { width: 100%; padding: 96px 20px 82px; }
   .intro { margin-bottom: 30px; }

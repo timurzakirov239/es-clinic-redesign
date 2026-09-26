@@ -4,58 +4,17 @@ import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "rea
 import Image from "next/image";
 import styles from "./comparison-scroll.module.css";
 
-const FLIP_DURATION = 460;
 const DESKTOP_REVEAL_INTERVAL = 700;
 const MOBILE_REVEAL_INTERVAL = 620;
 
-const ScrollPairCard = memo(function ScrollPairCard({ item, answer, index, revealed }) {
+const ScrollPairCard = memo(function ScrollPairCard({
+  item, answer, index, revealed, comparing, onCompareToggle,
+}) {
   const pairRef = useRef(null);
-  const flipAnimationsRef = useRef([]);
-
-  useEffect(() => () => {
-    flipAnimationsRef.current.forEach((animation) => animation.cancel());
-  }, []);
 
   const toggle = (event) => {
     event.stopPropagation();
-    const pair = pairRef.current;
-    if (!pair) return;
-
-    flipAnimationsRef.current.forEach((animation) => animation.cancel());
-    const afterCard = pair.querySelector("[data-after-card]");
-    const movingElements = afterCard ? [afterCard] : [];
-    const firstRects = new Map(
-      movingElements.map((element) => [element, element.getBoundingClientRect()]),
-    );
-
-    // Commit the final accordion geometry once, then animate only the card
-    // face. This avoids recalculating the whole mobile list on every frame.
-    const comparing = pair.dataset.comparing !== "true";
-    pair.dataset.comparing = String(comparing);
-    event.currentTarget.setAttribute("aria-expanded", String(comparing));
-    event.currentTarget.setAttribute(
-      "aria-label",
-      comparing ? "Свернуть сравнение" : "Показать сравнение",
-    );
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    flipAnimationsRef.current = movingElements.flatMap((element) => {
-      const first = firstRects.get(element);
-      const last = element.getBoundingClientRect();
-      const deltaX = first.left - last.left;
-      const deltaY = first.top - last.top;
-      if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) return [];
-      return [element.animate(
-        [
-          { transform: `translate3d(${deltaX}px, ${deltaY}px, 0)` },
-          { transform: "translate3d(0, 0, 0)" },
-        ],
-        {
-          duration: FLIP_DURATION,
-          easing: "cubic-bezier(.22, 1, .36, 1)",
-        },
-      )];
-    });
+    onCompareToggle(!comparing);
   };
 
   return (
@@ -63,7 +22,7 @@ const ScrollPairCard = memo(function ScrollPairCard({ item, answer, index, revea
       ref={pairRef}
       className={styles.pair}
       data-revealed={revealed}
-      data-comparing="false"
+      data-comparing={comparing}
       data-comparison-pair
       data-pair-index={index}
       style={{
@@ -100,8 +59,8 @@ const ScrollPairCard = memo(function ScrollPairCard({ item, answer, index, revea
           <button
             type="button"
             className={styles.compareToggle}
-            aria-label="Показать сравнение"
-            aria-expanded="false"
+            aria-label={comparing ? "Свернуть сравнение" : "Показать сравнение"}
+            aria-expanded={comparing}
             onClick={toggle}
           >
             <span className={styles.compareToggleIcon} aria-hidden="true">+</span>
@@ -115,12 +74,44 @@ const ScrollPairCard = memo(function ScrollPairCard({ item, answer, index, revea
 export function ScrollComparisonReveal({ before, after, heading }) {
   const sceneRef = useRef(null);
   const [revealed, setRevealed] = useState(() => new Set());
+  const [activeComparison, setActiveComparison] = useState(null);
   const pairs = useMemo(
     () => before.map((item, index) => ({ item, answer: after[index], index })),
     [after, before],
   );
   const upperPairs = pairs.slice(0, 4);
   const lowerPairs = pairs.slice(4);
+
+  const toggleComparison = (index, opening) => {
+    const root = sceneRef.current;
+    if (root && window.matchMedia("(max-width: 750px)").matches) {
+      root.querySelectorAll("[data-shifted]").forEach((element) => {
+        element.removeAttribute("data-shifted");
+        element.style.removeProperty("--active-lift");
+      });
+      const heading = root.querySelector("[data-comparison-scene] .intro-title");
+      heading?.removeAttribute("data-active-comparison");
+      heading?.style.removeProperty("--active-lift");
+
+      if (opening) {
+        const pair = root.querySelector(`[data-pair-index="${index}"]`);
+        const lift = Number.parseFloat(
+          pair && window.getComputedStyle(pair).getPropertyValue("--before-lift"),
+        ) || 0;
+        const group = pair?.parentElement;
+        group?.querySelectorAll("[data-comparison-pair]").forEach((previous) => {
+          if (Number(previous.dataset.pairIndex) >= index) return;
+          previous.style.setProperty("--active-lift", `${lift}px`);
+          previous.setAttribute("data-shifted", "");
+        });
+        if (index < 4 && heading) {
+          heading.style.setProperty("--active-lift", `${lift}px`);
+          heading.setAttribute("data-active-comparison", "");
+        }
+      }
+    }
+    setActiveComparison(opening ? index : null);
+  };
 
   useLayoutEffect(() => {
     const root = sceneRef.current;
@@ -293,6 +284,8 @@ export function ScrollComparisonReveal({ before, after, heading }) {
                 key={pair.index}
                 {...pair}
                 revealed={revealed.has(pair.index)}
+                comparing={activeComparison === pair.index}
+                onCompareToggle={(opening) => toggleComparison(pair.index, opening)}
               />
             ))}
           </div>
@@ -300,7 +293,13 @@ export function ScrollComparisonReveal({ before, after, heading }) {
       </div>
       <div className={`${styles.cards} ${styles.lowerCards}`} data-comparison-lower-scene>
         {lowerPairs.map((pair) => (
-          <ScrollPairCard key={pair.index} {...pair} revealed={revealed.has(pair.index)} />
+          <ScrollPairCard
+            key={pair.index}
+            {...pair}
+            revealed={revealed.has(pair.index)}
+            comparing={activeComparison === pair.index}
+            onCompareToggle={(opening) => toggleComparison(pair.index, opening)}
+          />
         ))}
       </div>
     </div>

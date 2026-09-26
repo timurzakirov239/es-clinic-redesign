@@ -1,6 +1,7 @@
 .scrollComparison {
   color: #533e2d;
   padding-bottom: 0;
+  overflow-anchor: none;
 }
 
 .upperScene {
@@ -213,7 +214,7 @@
     padding-inline: 0;
     padding-top: 0;
     animation: none;
-    transition: padding-top .58s cubic-bezier(.22, 1, .36, 1);
+    transition: transform .58s cubic-bezier(.22, 1, .36, 1);
   }
 
   /* Tighter gap between the section title and the first pair. */
@@ -252,14 +253,13 @@
     padding: 17px 19px 48px;
     border-color: #fff8e7d9;
     background: linear-gradient(135deg, #fffdf1 0%, #fff8e7 54%, #eadbc9 100%);
-    opacity: 0;
+    opacity: 1;
     visibility: hidden;
     pointer-events: none;
-    transform: translateX(20px);
+    transform: translateX(28px);
     transition:
-      opacity .52s ease,
-      transform .62s cubic-bezier(.22, 1, .36, 1),
-      visibility 0s linear .62s;
+      transform .58s cubic-bezier(.22, 1, .36, 1),
+      visibility 0s linear .58s;
   }
   .cards > .pair[data-revealed="true"] .afterCard {
     opacity: 1;
@@ -272,7 +272,7 @@
   /* Lift each "before" card just past its own text, keeping the full copy
      readable above the overlapping clinic card. */
   .cards > .pair[data-comparing="true"] {
-    padding-top: var(--before-lift, 112px);
+    z-index: 2;
   }
   .cards > .pair[data-comparing="true"] .beforeCard {
     transform: translateY(calc(-1 * var(--before-lift, 112px)));
@@ -280,6 +280,14 @@
   .cards > .pair .beforeCard {
     transition: transform .58s cubic-bezier(.22, 1, .36, 1);
   }
+  .cards > .pair[data-shifted] {
+    transform: translateY(calc(-1 * var(--active-lift, 0px)));
+  }
+  .cards > .pair[data-reveal-animating] .beforeCard,
+  .cards > .pair[data-reveal-animating] .afterCard {
+    will-change: transform;
+  }
+  .cards > .pair .afterCard { will-change: auto; }
 
   .cards > .pair .beforeCard .cardHeading,
   .cards > .pair .afterCard .cardHeading { margin-bottom: 12px; font-size: 10px; }
@@ -294,6 +302,10 @@
     column-gap: 12px;
     align-items: start;
     max-width: 100%;
+    transition: transform .58s cubic-bezier(.22, 1, .36, 1);
+  }
+  .stickyView > :global(.intro-title[data-active-comparison]) {
+    transform: translateY(calc(-1 * var(--active-lift, 0px)));
   }
   .stickyView > :global(.intro-title) > :global(img) {
     float: none;

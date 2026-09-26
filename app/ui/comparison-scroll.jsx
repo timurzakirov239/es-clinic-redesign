@@ -74,7 +74,7 @@ const ScrollPairCard = memo(function ScrollPairCard({
 export function ScrollComparisonReveal({ before, after, heading }) {
   const sceneRef = useRef(null);
   const [revealed, setRevealed] = useState(() => new Set());
-  const [activeComparison, setActiveComparison] = useState(null);
+  const [activeComparisons, setActiveComparisons] = useState(() => new Set());
   const pairs = useMemo(
     () => before.map((item, index) => ({ item, answer: after[index], index })),
     [after, before],
@@ -84,33 +84,50 @@ export function ScrollComparisonReveal({ before, after, heading }) {
 
   const toggleComparison = (index, opening) => {
     const root = sceneRef.current;
-    if (root && window.matchMedia("(max-width: 750px)").matches) {
-      root.querySelectorAll("[data-shifted]").forEach((element) => {
-        element.removeAttribute("data-shifted");
-        element.style.removeProperty("--active-lift");
-      });
-      const heading = root.querySelector("[data-comparison-scene] .intro-title");
-      heading?.removeAttribute("data-active-comparison");
-      heading?.style.removeProperty("--active-lift");
+    const nextActive = new Set(activeComparisons);
+    if (opening) nextActive.add(index);
+    else nextActive.delete(index);
 
-      if (opening) {
-        const pair = root.querySelector(`[data-pair-index="${index}"]`);
-        const lift = Number.parseFloat(
-          pair && window.getComputedStyle(pair).getPropertyValue("--before-lift"),
-        ) || 0;
-        const group = pair?.parentElement;
-        group?.querySelectorAll("[data-comparison-pair]").forEach((previous) => {
-          if (Number(previous.dataset.pairIndex) >= index) return;
-          previous.style.setProperty("--active-lift", `${lift}px`);
-          previous.setAttribute("data-shifted", "");
-        });
-        if (index < 4 && heading) {
-          heading.style.setProperty("--active-lift", `${lift}px`);
-          heading.setAttribute("data-active-comparison", "");
-        }
+    if (root && window.matchMedia("(max-width: 750px)").matches) {
+      const pairs = [...root.querySelectorAll("[data-comparison-pair]")];
+      const liftByIndex = new Map(pairs.map((pair) => [
+        Number(pair.dataset.pairIndex),
+        Number.parseFloat(window.getComputedStyle(pair).getPropertyValue("--before-lift")) || 0,
+      ]));
+      const totalLift = [...nextActive].reduce((sum, activeIndex) => sum + (liftByIndex.get(activeIndex) ?? 0), 0);
+      const currentTotalLift = [...activeComparisons].reduce(
+        (sum, activeIndex) => sum + (liftByIndex.get(activeIndex) ?? 0),
+        0,
+      );
+      const scrollDelta = totalLift - currentTotalLift;
+      if (scrollDelta) {
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        window.scrollBy({ top: scrollDelta, behavior: reducedMotion ? "auto" : "smooth" });
       }
+
+      pairs.forEach((pair) => {
+        const pairIndex = Number(pair.dataset.pairIndex);
+        const pairLift = liftByIndex.get(pairIndex) ?? 0;
+        const isActive = nextActive.has(pairIndex);
+        const scrollShift = isActive ? pairLift : 0;
+
+        if (scrollShift > 0) {
+          pair.style.setProperty("--comparison-scroll-shift", `${scrollShift}px`);
+          pair.setAttribute("data-scroll-shift", "");
+        } else {
+          pair.removeAttribute("data-scroll-shift");
+          pair.style.removeProperty("--comparison-scroll-shift");
+        }
+        if (isActive) {
+          pair.style.setProperty("--comparison-expand", `${pairLift}px`);
+          pair.setAttribute("data-comparing", "true");
+        } else {
+          pair.style.removeProperty("--comparison-expand");
+          pair.setAttribute("data-comparing", "false");
+        }
+      });
     }
-    setActiveComparison(opening ? index : null);
+    setActiveComparisons(nextActive);
   };
 
   useLayoutEffect(() => {
@@ -284,7 +301,7 @@ export function ScrollComparisonReveal({ before, after, heading }) {
                 key={pair.index}
                 {...pair}
                 revealed={revealed.has(pair.index)}
-                comparing={activeComparison === pair.index}
+                comparing={activeComparisons.has(pair.index)}
                 onCompareToggle={(opening) => toggleComparison(pair.index, opening)}
               />
             ))}
@@ -297,7 +314,7 @@ export function ScrollComparisonReveal({ before, after, heading }) {
             key={pair.index}
             {...pair}
             revealed={revealed.has(pair.index)}
-            comparing={activeComparison === pair.index}
+            comparing={activeComparisons.has(pair.index)}
             onCompareToggle={(opening) => toggleComparison(pair.index, opening)}
           />
         ))}

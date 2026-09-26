@@ -407,7 +407,7 @@ main {
 .video-card {
   position: relative;
   aspect-ratio: 9/16;
-  width: min(100%, 420px);
+  width: min(100%, 336px);
   justify-self: center;
   border-radius: 22px;
   overflow: hidden;
@@ -442,6 +442,15 @@ main {
   height: 100%;
   object-fit: cover;
   background: #cabca9;
+}
+@media (max-width: 760px) {
+  .video-card[data-mode="engaged"] video { cursor: pointer; }
+  .video-card[data-mode="engaged"] .video-poster,
+  .video-card[data-mode="engaged"] .video-caption { pointer-events: none; }
+  .video-card[data-mode="engaged"] video:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: -8px;
+  }
 }
 .video-play {
   position: absolute;

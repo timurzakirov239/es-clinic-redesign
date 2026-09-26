@@ -125,6 +125,16 @@ export function VideoCard() {
   const frameCallbackRef = useRef(null);
   const [mode, setMode] = useState("idle");
   const [posterVisible, setPosterVisible] = useState(true);
+  const [mobile, setMobile] = useState(false);
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 760px)");
+    const update = () => setMobile(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
 
   const showFirstVideoFrame = (video) => {
     if (frameCallbackRef.current !== null && video.cancelVideoFrameCallback) {
@@ -161,6 +171,13 @@ export function VideoCard() {
     video.play().then(() => showFirstVideoFrame(video)).catch(() => {});
   };
 
+  const toggleMobilePlayback = () => {
+    if (!mobile || mode !== "engaged") return;
+    const video = videoRef.current;
+    if (video.paused) video.play().catch(() => {});
+    else video.pause();
+  };
+
   useEffect(() => () => {
     const video = videoRef.current;
     if (frameCallbackRef.current !== null && video?.cancelVideoFrameCallback) {
@@ -179,10 +196,22 @@ export function VideoCard() {
       <video
         ref={videoRef}
         src="/assets/daria-tishina-web.mp4"
-        controls={mode === "engaged"}
+        controls={mode === "engaged" && !mobile}
         playsInline
         preload="none"
-        aria-label="Дарья Тишина о Медицинском Family Office"
+        aria-label={mobile && mode === "engaged"
+          ? `${playing ? "Приостановить" : "Продолжить"} видео с Дарьей Тишиной`
+          : "Дарья Тишина о Медицинском Family Office"}
+        role={mobile && mode === "engaged" ? "button" : undefined}
+        tabIndex={mobile && mode === "engaged" ? 0 : undefined}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onClick={toggleMobilePlayback}
+        onKeyDown={(event) => {
+          if (!mobile || mode !== "engaged" || (event.key !== "Enter" && event.key !== " ")) return;
+          event.preventDefault();
+          toggleMobilePlayback();
+        }}
       />
       <Image
         className={`video-poster${posterVisible ? "" : " is-hidden"}`}
@@ -190,7 +219,7 @@ export function VideoCard() {
         unoptimized
         alt="Дарья Сергеевна Тишина"
         fill
-        sizes="(max-width: 760px) 90vw, 420px"
+        sizes="(max-width: 760px) 90vw, 336px"
       />
       <div className={`video-shade${posterVisible ? "" : " is-hidden"}`} aria-hidden="true" />
       {mode !== "engaged" && (

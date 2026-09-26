@@ -29,6 +29,7 @@ test("current landing: content, navigation, consultation, media and responsive l
       assert.equal(await page.locator(`#${id}`).count(), 1, `Section #${id}`);
     assert.equal(await page.locator('[data-hero-version="rebuilt"]').getAttribute("data-hero-ready"), "true");
     assert.equal(videoRequests.length, 0, "Video must remain deferred before interaction");
+    assert.equal(Math.round((await page.locator(".video-card").boundingBox()).width), 336);
 
     await page.getByRole("button", { name: "Открыть меню" }).click();
     assert.equal(await page.locator("#rebuilt-menu[open]").count(), 1);
@@ -51,6 +52,7 @@ test("current landing: content, navigation, consultation, media and responsive l
     await page.getByRole("button", { name: "Смотреть видео с Дарьей Тишиной" }).click();
     assert.ok(videoRequests.length > 0, "Video is requested after Play");
     assert.equal(await page.locator(".video-card").getAttribute("data-mode"), "engaged");
+    assert.equal(await page.locator(".video-card video").evaluate(video => video.controls), true);
     await page.locator("video").evaluate(video => video.pause());
 
     await page.locator("#faq summary").first().click();
@@ -66,6 +68,37 @@ test("current landing: content, navigation, consultation, media and responsive l
     }
     assert.deepEqual(errors, [], "Browser exceptions");
     assert.deepEqual(failed, [], "Failed HTTP resources");
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
+
+test("mobile video pauses and resumes by tapping the frame after launch", { timeout: 60000 }, async () => {
+  const browser = process.env.TEST_CDP
+    ? await chromium.connectOverCDP(process.env.TEST_CDP)
+    : await chromium.launch({ headless: true, executablePath: process.env.TEST_CHROME || undefined });
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+    reducedMotion: "reduce",
+  });
+  const page = await context.newPage();
+  try {
+    await page.goto(base, { waitUntil: "networkidle" });
+    const card = page.locator(".video-card");
+    await card.scrollIntoViewIfNeeded();
+    assert.ok((await card.boundingBox()).width <= 360);
+    await page.getByRole("button", { name: "Смотреть видео с Дарьей Тишиной" }).tap();
+    await page.waitForFunction(() => !document.querySelector(".video-card video")?.paused);
+    assert.equal(await page.locator(".video-card video").evaluate(video => video.controls), false);
+
+    await page.locator(".video-card video").tap({ position: { x: 40, y: 80 } });
+    await page.waitForFunction(() => document.querySelector(".video-card video")?.paused);
+    await page.locator(".video-card video").tap({ position: { x: 180, y: 280 } });
+    await page.waitForFunction(() => !document.querySelector(".video-card video")?.paused);
+    await page.locator(".video-card video").evaluate(video => video.pause());
   } finally {
     await context.close();
     await browser.close();

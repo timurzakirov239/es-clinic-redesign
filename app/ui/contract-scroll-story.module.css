@@ -8,6 +8,8 @@
   background-attachment: fixed;
 }
 
+.mobileBackdrop { display: none; }
+
 .content {
   width: min(1480px, calc(100% - 2 * clamp(24px, 5vw, 88px)));
   margin-inline: auto;
@@ -152,7 +154,21 @@
 
 @media (max-width: 750px) {
   .journey {
+    overflow: clip;
     background-color: #716e69;
+    background-image: none;
+    background-attachment: scroll;
+  }
+  .mobileBackdrop {
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    display: block;
+    height: 100vh;
+    height: 100lvh;
+    margin-bottom: -100vh;
+    margin-bottom: -100lvh;
+    pointer-events: none;
     background-image:
       linear-gradient(90deg, #34333159, #47444126 72%),
       linear-gradient(180deg, #47444145, #34323038),
@@ -160,9 +176,8 @@
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    background-attachment: fixed;
   }
-  .content { width: 100%; padding: 96px 20px 82px; }
+  .content { position: relative; z-index: 1; width: 100%; padding: 96px 20px 82px; }
   .intro { margin-bottom: 30px; }
   .groups { display: none; }
   .mobileGroups { display: grid; gap: 28px; }

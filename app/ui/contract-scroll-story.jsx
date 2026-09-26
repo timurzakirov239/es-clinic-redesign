@@ -241,6 +241,7 @@ export function ContractScrollStory({ intro }) {
 
   return (
     <div className={styles.journey} data-contract-scroll-preview>
+      <div className={styles.mobileBackdrop} aria-hidden="true" />
       <div className={styles.content}>
         <div className={styles.intro}>{intro}</div>
         <div className={styles.groups} ref={groupsRef}>

@@ -25,7 +25,7 @@ export function RebuiltHero() {
     // Decode the actual CSS background before revealing its text overlay.
     const photo = new window.Image();
     photo.fetchPriority = "high";
-    photo.src = "/assets/original-first-screen/1d6c2900267b6b8d.png";
+    photo.src = "/assets/original-first-screen/hero.webp";
     const fonts = document.fonts
       ? Promise.all([document.fonts.load('16px Aeroport'), document.fonts.load('16px Geologica')])
       : Promise.resolve();
@@ -124,7 +124,7 @@ export function RebuiltHero() {
         <div className={s.mobilePhoto} aria-hidden="true" />
         <div className={s.card}>
           <div className={s.avatars}>
-            {doctors.map((doctor, index) => <a key={doctor} href="#team" aria-label={names[index]} data-doc={index} className={s.avatar}><Image src={doctor === "utin" ? "/assets/original-first-screen/utin.jpg" : `/assets/official-avatar-${doctor}.png`} width={50} height={50} unoptimized alt="" /></a>)}
+            {doctors.map((doctor, index) => <a key={doctor} href="#team" aria-label={names[index]} data-doc={index} className={s.avatar}><Image src={`/assets/official-avatar-${doctor}.webp`} width={50} height={50} unoptimized alt="" /></a>)}
             <a href="#team" aria-label="Вся команда" className={s.more}><Arrow /></a>
           </div>
           <Editable id="rebuilt-team-description">Постоянная медицинская команда, которая берёт заботу о вашем здоровье на себя</Editable>

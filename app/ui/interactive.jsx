@@ -186,7 +186,7 @@ export function VideoCard() {
       />
       <Image
         className={`video-poster${posterVisible ? "" : " is-hidden"}`}
-        src="/assets/daria-enhanced.webp"
+        src="/assets/daria-poster.webp"
         unoptimized
         alt="Дарья Сергеевна Тишина"
         fill

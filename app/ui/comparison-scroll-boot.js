@@ -1,7 +1,7 @@
 // Runs while the HTML is parsed, before the client component hydrates.
-// Only guard the approach to this prototype's comparison until it is ready.
+// Guard the approach to the landing-page comparison until it is ready.
 export const comparisonBootGuard = `(() => {
-  if (location.pathname !== "/scroll-version" && location.pathname !== "/scroll-version/") return;
+  if (location.pathname !== "/" && location.pathname !== "") return;
   const cleanup = () => {
     window.removeEventListener('wheel', guard, true);
     window.removeEventListener('comparison-scroll-ready', cleanup);

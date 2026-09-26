@@ -96,7 +96,18 @@ function ContractGroup({ group, index }) {
       data-expanded={expanded}
     >
       <div className={`${styles.panelHeading} ${styles.staticHeading}`}>
-        <h3>{title}</h3>
+        <h3>
+          <button
+            type="button"
+            className={styles.titleToggle}
+            data-contract-title
+            aria-expanded={expanded}
+            aria-controls={contentId}
+            onClick={handleToggle}
+          >
+            {title}
+          </button>
+        </h3>
       </div>
       <button
         type="button"
@@ -130,11 +141,13 @@ function DesktopContractPanel({ group, index }) {
   const contentId = useId();
   const title = groupTitle(group, index);
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = (event) => {
+    if (event.target.closest("[data-contract-title]")) return;
     if (!locked) setExpanded(true);
   };
 
-  const handleFocus = () => {
+  const handleFocus = (event) => {
+    if (event.target.closest("[data-contract-title]")) return;
     if (!locked) setExpanded(true);
   };
 
@@ -158,7 +171,18 @@ function DesktopContractPanel({ group, index }) {
       onFocus={handleFocus}
     >
       <div className={`${styles.panelHeading} ${styles.staticHeading}`}>
-        <h3>{title}</h3>
+        <h3>
+          <button
+            type="button"
+            className={styles.titleToggle}
+            data-contract-title
+            aria-expanded={expanded}
+            aria-controls={contentId}
+            onClick={handleToggle}
+          >
+            {title}
+          </button>
+        </h3>
       </div>
       <button
         type="button"

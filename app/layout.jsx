@@ -73,7 +73,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ru" className={`${aeroport.variable} ${germes.variable}`}>
       <head>
-        <link rel="preload" as="image" href="/assets/original-first-screen/1d6c2900267b6b8d.png" fetchPriority="high" />
+        <link rel="preload" as="image" href="/assets/original-first-screen/hero.webp" fetchPriority="high" />
         <Script
           id="editor-fixed-layout-preload"
           strategy="beforeInteractive"

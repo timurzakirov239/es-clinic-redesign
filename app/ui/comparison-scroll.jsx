@@ -6,16 +6,23 @@ import styles from "./comparison-scroll.module.css";
 
 function ScrollPairCard({ item, answer, index, revealed }) {
   const [comparing, setComparing] = useState(false);
-  const [beforeHeight, setBeforeHeight] = useState(0);
+  const [beforeRevealLift, setBeforeRevealLift] = useState(0);
   const beforeRef = useRef(null);
+  const beforeTextRef = useRef(null);
 
   useLayoutEffect(() => {
     const el = beforeRef.current;
-    if (!el) return;
-    const measure = () => setBeforeHeight(el.offsetHeight);
+    const text = beforeTextRef.current;
+    if (!el || !text) return;
+    const measure = () => {
+      const cardTop = el.getBoundingClientRect().top;
+      const textBottom = text.getBoundingClientRect().bottom;
+      setBeforeRevealLift(Math.ceil(textBottom - cardTop + 12));
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(el);
+    observer.observe(text);
     window.addEventListener("resize", measure);
     return () => {
       observer.disconnect();
@@ -34,13 +41,16 @@ function ScrollPairCard({ item, answer, index, revealed }) {
       data-revealed={revealed}
       data-comparing={comparing}
       data-reveal-trigger={index === 0 ? "" : undefined}
-      style={{ "--card-index": index, "--before-h": `${beforeHeight}px` }}
+      style={{
+        "--card-index": index,
+        "--before-lift": `${beforeRevealLift}px`,
+      }}
       aria-label={`Сравнение ${index + 1}`}
     >
       <div className={styles.stack}>
         <div className={styles.beforeCard} ref={beforeRef}>
           <div className={styles.cardHeading}><span>Самостоятельно</span></div>
-          <p>{item}</p>
+          <p ref={beforeTextRef}>{item}</p>
         </div>
         <div className={styles.afterCard} aria-hidden={!revealed}>
           <div className={styles.cardHeading}>

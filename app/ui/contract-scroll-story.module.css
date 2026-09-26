@@ -2,7 +2,7 @@
   position: relative;
   isolation: isolate;
   background-color: #6d5d4d;
-  background-image: linear-gradient(90deg, #3e2d204d, #3e2d2012 72%), linear-gradient(180deg, #3e2d2040, #3e2d202d), url("/assets/official-footer-building.png");
+  background-image: linear-gradient(90deg, #3e2d204d, #3e2d2012 72%), linear-gradient(180deg, #3e2d2040, #3e2d202d), url("/assets/official-footer-building.webp");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -70,10 +70,27 @@
 }
 
 .panelHeading h3 {
+  flex: 1 1 auto;
+  min-width: 0;
   margin: 0;
   font-size: clamp(27px, 2.35vw, 41px);
   line-height: 1.07;
 }
+
+.titleToggle {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 clamp(44px, 4vw, 58px) 0 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.titleToggle:focus-visible { outline: 2px solid currentColor; outline-offset: 6px; }
 
 .staticHeading {
   justify-content: flex-start;
@@ -164,17 +181,23 @@
     background-image:
       linear-gradient(90deg, #3e2d204d, #3e2d2012 72%),
       linear-gradient(180deg, #3e2d2040, #3e2d202d),
-      url("/assets/official-footer-building.png");
+      url("/assets/official-footer-building.webp");
     background-size: 100% 100%, 100% 100%, auto 100svh;
     background-position: center, center, center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+    background-repeat: no-repeat, no-repeat, repeat-y;
+    background-attachment: scroll;
   }
   .content { width: 100%; padding: 96px 20px 82px; }
   .intro { margin-bottom: 30px; }
   .groups { display: none; }
   .mobileGroups { display: grid; gap: 28px; }
-  .panel { padding: 20px; }
+  .panel {
+    padding: 20px;
+    background: linear-gradient(135deg, #765d4ce8, #806554df);
+    box-shadow: 0 8px 24px #24180e20;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
   .panelHeading { min-height: 54px; }
   .panelHeading h3 { font-size: 25px; }
   .panelExpand { width: 36px; height: 36px; font-size: 24px; }

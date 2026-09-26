@@ -1,4 +1,4 @@
-import { ScrollVersionLanding } from "./scroll-version/landing";
+import { ScrollVersionLanding } from "./landing";
 
 export default function HomePage() {
   return <ScrollVersionLanding />;

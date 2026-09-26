@@ -196,7 +196,7 @@
   color:var(--cream);
   -webkit-font-smoothing:antialiased;
   /* Hero-фото (Tilda CDN) */
-  background:#4b4034 url('/assets/original-first-screen/1d6c2900267b6b8d.png') center/cover no-repeat;
+  background:#4b4034 url('/assets/original-first-screen/hero.webp') center/cover no-repeat;
 }
 .screen::after{
   content:"";position:absolute;inset:0;z-index:1;
@@ -233,7 +233,7 @@
   .title path{fill:#533E2D;}
   .tagline{display:none;}
   .mobilePhoto{order:5;width:100vw;height:clamp(380px,96vw,500px);border-radius:0;overflow:hidden;
-    background:#4b4034 url('/assets/original-first-screen/1d6c2900267b6b8d.png') center/cover no-repeat;}
+    background:#4b4034 url('/assets/original-first-screen/hero.webp') center/cover no-repeat;}
   .avatars{order:6;justify-content:center;margin:-74px 0 26px;position:relative;z-index:2;}
   .header::before{display:none;}
   .header .menuButton, .header .social{background:rgba(83,62,45,.05);border:1px solid rgba(83,62,45,.10);color:#533E2D;box-shadow:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}

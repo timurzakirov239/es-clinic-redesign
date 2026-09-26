@@ -1749,7 +1749,7 @@ footer {
   .final-cta .photo {
     min-height: 340px;
   }
-  .prefooter-photo { height: 78svh; min-height: 520px; }
+  .prefooter-photo { height: clamp(260px, 80vw, 380px); min-height: 260px; }
   footer { padding: 40px 16px; }
   .footer-brand { margin-bottom: 44px; }
   .footer-brand img { width: 48px; }

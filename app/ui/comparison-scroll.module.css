@@ -114,7 +114,7 @@
 
   .pair[data-revealed="true"]:hover .beforeCard,
   .pair[data-revealed="true"]:focus-within .beforeCard {
-    transform: translateY(calc(-1 * clamp(122px, 14vh, 136px))) rotate(-.5deg) scale(.99);
+    transform: translateY(calc(0px - var(--before-lift, 120px))) rotate(-.5deg) scale(.99);
   }
 
   .pair[data-revealed="true"]:hover .afterCard,
@@ -258,19 +258,54 @@
     transition-delay: 0s;
   }
 
-  /* Comparing: "before" slides up only enough to keep the two cards
-     visually joined — the bottom ~32px stays tucked behind "after". */
+  /* Lift each "before" card just past its own text, keeping the full copy
+     readable above the overlapping clinic card. */
   .cards > .pair[data-comparing="true"] {
-    padding-top: calc(var(--before-h, 180px) - 32px);
+    padding-top: var(--before-lift, 112px);
   }
   .cards > .pair[data-comparing="true"] .beforeCard {
-    transform: translateY(calc(-1 * (var(--before-h, 180px) - 32px)));
+    transform: translateY(calc(-1 * var(--before-lift, 112px)));
+    will-change: transform;
+  }
+
+  .cards > .pair .beforeCard { transition-duration: .46s; }
+  .cards > .pair[data-comparing="true"] { transition-duration: .46s; }
+  .cards > .pair .afterCard {
+    transform: translateX(28px);
+    transition:
+      opacity .4s ease,
+      transform .48s cubic-bezier(.22, 1, .36, 1),
+      visibility 0s linear .48s;
   }
 
   .cards > .pair .beforeCard .cardHeading,
   .cards > .pair .afterCard .cardHeading { margin-bottom: 12px; font-size: 10px; }
   .cards > .pair .beforeCard p { font-size: 16px; line-height: 1.38; }
   .cards > .pair .afterCard p { font-size: 17px; line-height: 1.38; }
+
+  /* Keep the comparison heading inside the narrow viewport, even when the
+     visual editor has stored a desktop width for the editable title. */
+  .stickyView > :global(.intro-title) {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: start;
+    max-width: 100%;
+  }
+  .stickyView > :global(.intro-title) > :global(img) {
+    float: none;
+    width: 24px;
+    height: 24px;
+    margin: 6px 0 0;
+  }
+  .stickyView > :global(.intro-title) :global(h2) {
+    grid-column: 2;
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100% !important;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

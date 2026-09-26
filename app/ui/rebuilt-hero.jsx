@@ -15,6 +15,8 @@ export function RebuiltHero() {
   const [ready, setReady] = useState(false);
   const [menu, setMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [overScene, setOverScene] = useState(false);
+  const [overContract, setOverContract] = useState(false);
   const menuRef = useRef(null);
   const drawerRef = useRef(null);
   useEffect(() => {
@@ -23,7 +25,7 @@ export function RebuiltHero() {
     // Decode the actual CSS background before revealing its text overlay.
     const photo = new window.Image();
     photo.fetchPriority = "high";
-    photo.src = "/assets/original-first-screen/1d6c2900267b6b8d.png";
+    photo.src = "/assets/original-first-screen/hero.webp";
     const fonts = document.fonts
       ? Promise.all([document.fonts.load('16px Aeroport'), document.fonts.load('16px Geologica')])
       : Promise.resolve();
@@ -33,10 +35,26 @@ export function RebuiltHero() {
     return () => { active = false; window.clearTimeout(fallback); };
   }, []);
   useEffect(() => {
-    const scroll = () => setScrolled(window.scrollY > 40);
+    const scene = document.querySelector("[data-contract-scene]");
+    const contract = document.querySelector("[data-contract-scroll-preview]");
+    const scroll = () => {
+      setScrolled(window.scrollY > 40);
+      if (scene) {
+        const rect = scene.getBoundingClientRect();
+        setOverScene(rect.top < 93 && rect.bottom > 93);
+      }
+      if (contract) {
+        const rect = contract.getBoundingClientRect();
+        setOverContract(window.matchMedia("(max-width: 750px)").matches && rect.top < 74 && rect.bottom > 0);
+      }
+    };
     scroll();
     window.addEventListener("scroll", scroll, { passive: true });
-    return () => window.removeEventListener("scroll", scroll);
+    window.addEventListener("resize", scroll);
+    return () => {
+      window.removeEventListener("scroll", scroll);
+      window.removeEventListener("resize", scroll);
+    };
   }, []);
   useEffect(() => {
     const drawer = drawerRef.current;
@@ -54,7 +72,7 @@ export function RebuiltHero() {
     <>
       <noscript><style>{'[data-hero-ready="false"]{opacity:1!important;visibility:visible!important;}'}</style></noscript>
       {/* Keep fixed navigation outside the sticky hero's stacking context. */}
-      <header className={`${s.header} ${!scrolled && !menu ? s.dark : ""}`} data-hero-ready={ready} data-layout-scope="official-hero-v2">
+      <header className={`${s.header} ${!scrolled && !menu ? s.dark : ""} ${overScene ? s.sceneHeader : ""} ${overContract && !menu ? s.contractHeader : ""}`} data-hero-ready={ready} data-layout-scope="official-hero-v2">
         <div className={s.headerInner}>
           <div className={s.left}>
             <button className={s.menuButton} ref={menuRef} type="button" aria-label={menu ? "Закрыть меню" : "Открыть меню"} aria-expanded={menu} aria-controls="rebuilt-menu" onClick={() => setMenu(!menu)}><span className={s.burger}><span/><span/><span/></span></button>
@@ -78,7 +96,7 @@ export function RebuiltHero() {
           <Image className={s.drawerCross} src="/assets/clover.svg" width={360} height={360} alt="" aria-hidden="true" />
           <nav className={s.drawerNav} aria-label="Разделы лендинга">
             {links.map(([id, name]) => <a key={id} href={`#${id}`} onClick={() => setMenu(false)}>{name}</a>)}
-            <a href="https://es-clinic.ru/legal" target="_blank" rel="noopener noreferrer" onClick={() => setMenu(false)}>Документы ↗</a>
+            <a href="/legal" onClick={() => setMenu(false)}>Документы ↗</a>
           </nav>
           <div className={s.drawerContacts}>
             <a className={s.drawerPhone} href="tel:+74958681857">+7 (495) 868-18-57</a>
@@ -91,6 +109,7 @@ export function RebuiltHero() {
           <div className={s.drawerBottom}>ЕС Клиника – забота о здоровье семьи</div>
         </div>
       </dialog>
+    <div className={s.overlapShell}>
     <section className={s.screen} data-hero-ready={ready} aria-label="ЕС Клиника – Медицинский Family Office" data-hero-version="rebuilt" data-layout-scope="official-hero-v2">
       <div className={s.inner}>
         <div className={s.content}>
@@ -105,13 +124,14 @@ export function RebuiltHero() {
         <div className={s.mobilePhoto} aria-hidden="true" />
         <div className={s.card}>
           <div className={s.avatars}>
-            {doctors.map((doctor, index) => <a key={doctor} href="#team" aria-label={names[index]} data-doc={index} className={s.avatar}><Image src={doctor === "utin" ? "/assets/original-first-screen/utin.jpg" : `/assets/official-avatar-${doctor}.png`} width={50} height={50} unoptimized alt="" /></a>)}
+            {doctors.map((doctor, index) => <a key={doctor} href="#team" aria-label={names[index]} data-doc={index} className={s.avatar}><Image src={`/assets/official-avatar-${doctor}.webp`} width={50} height={50} unoptimized alt="" /></a>)}
             <a href="#team" aria-label="Вся команда" className={s.more}><Arrow /></a>
           </div>
           <Editable id="rebuilt-team-description">Постоянная медицинская команда, которая берёт заботу о вашем здоровье на себя</Editable>
         </div>
       </div>
     </section>
+    </div>
     </>
   );
 }

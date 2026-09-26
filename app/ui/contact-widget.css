@@ -47,7 +47,7 @@
 .esc-fab.is-open .esc-fab__btn::after{display:none;}
 .esc-fab__btn{position:relative;}
 @keyframes esc-fab-ping{0%{transform:scale(1);opacity:.6;}70%,100%{transform:scale(1.6);opacity:0;}}
-@media (max-width:768px){
+@media (max-width: 750px){
   .esc-fab{right:14px;bottom:14px;gap:10px;}
   .esc-fab__list{gap:10px;}
   .esc-fab__item,.esc-fab__btn{width:52px;height:52px;}

@@ -1,0 +1,345 @@
+.scrollComparison {
+  color: #533e2d;
+  padding-bottom: 0;
+}
+
+.upperScene {
+  position: relative;
+  padding-top: 0;
+}
+
+.stickyView {
+  padding-top: 0;
+}
+
+.stickyView > :global(.intro-title) {
+  position: relative;
+  z-index: 6;
+  margin-bottom: clamp(142px, 16vh, 154px);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  column-gap: 0;
+  row-gap: clamp(16px, 2vw, 28px);
+  width: 100%;
+  align-items: start;
+}
+
+.upperCards .pair { grid-column: span 2; }
+
+.lowerCards {
+  margin-top: clamp(142px, 16vh, 154px);
+  padding-bottom: 18px;
+}
+
+.lowerCards .pair:nth-child(1) { grid-column: 2 / span 2; }
+.lowerCards .pair:nth-child(2) { grid-column: 4 / span 2; }
+.lowerCards .pair:nth-child(3) { grid-column: 6 / span 2; }
+
+.pair {
+  --reveal-delay: calc(var(--reveal-order, 0) * 90ms);
+  position: relative;
+  min-width: 0;
+  padding-inline: clamp(6px, 1vw, 14px);
+  animation: card-appear .8s ease both;
+  animation-delay: calc(var(--card-index) * 70ms);
+}
+
+.stack {
+  display: grid;
+  position: relative;
+  transform: rotate(var(--pile-rotation, -1.4deg));
+  transition: transform .45s cubic-bezier(.2, .8, .2, 1);
+}
+
+.pair:nth-child(2n) .stack { --pile-rotation: 1.2deg; }
+.pair:nth-child(3n) .stack { --pile-rotation: -2deg; }
+.lowerCards .pair:nth-child(2) .stack { --pile-rotation: 1.2deg; }
+.pair[data-revealed="true"] .stack { transform: translateY(-7px) rotate(0deg) scale(1.01); }
+
+.beforeCard,
+.afterCard {
+  position: relative;
+  grid-area: 1 / 1;
+  box-sizing: border-box;
+  border-radius: 22px;
+}
+
+.beforeCard {
+  z-index: 0;
+  width: 100%;
+  min-height: 188px;
+  padding: 20px 25px 78px;
+  border: 1px solid #dfcfba;
+  background: linear-gradient(145deg, #f2e9dce8, #dfd1bfc7);
+  box-shadow: 0 14px 34px #6b50371b, inset 0 1px #fff9;
+}
+
+.afterCard {
+  z-index: 1;
+  width: 100%;
+  min-height: 188px;
+  padding: 20px 25px 78px;
+  border: 1px solid #fff8e7d9;
+  background: linear-gradient(135deg, #fffdf1 0%, #fff8e7 54%, #eadbc9 100%);
+  box-shadow: 0 24px 54px #6b50372e, 0 2px 6px #6b503714, inset 0 1px #fff;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(108%) scale(.97);
+  transition: opacity .48s ease, transform .58s cubic-bezier(.2, .8, .2, 1), visibility 0s linear .58s;
+}
+
+.pair[data-revealed="true"] .afterCard {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0) scale(1);
+  transition-delay: var(--reveal-delay), var(--reveal-delay), 0s;
+}
+
+.pair[data-reveal-animating] .afterCard { will-change: transform, opacity; }
+
+.pair[data-comparison-visible][data-revealed="true"] .afterCard { will-change: transform; }
+
+@media (hover: hover) and (pointer: fine) {
+  .pair[data-revealed="true"]:hover,
+  .pair[data-revealed="true"]:focus-within { z-index: 5; }
+
+  .pair[data-revealed="true"] .beforeCard,
+  .pair[data-revealed="true"] .afterCard {
+    transition: transform .72s cubic-bezier(.22, 1, .36, 1);
+  }
+
+  .pair[data-revealed="true"]:hover .stack,
+  .pair[data-revealed="true"]:focus-within .stack {
+    transform: translateY(-7px) rotate(0deg) scale(1.01);
+  }
+
+  .pair[data-revealed="true"]:hover .beforeCard,
+  .pair[data-revealed="true"]:focus-within .beforeCard {
+    transform: translateY(calc(0px - var(--before-lift, 120px))) rotate(-.5deg) scale(.99);
+  }
+
+  .pair[data-revealed="true"]:hover .afterCard,
+  .pair[data-revealed="true"]:focus-within .afterCard {
+    transform: translateY(-4px) scale(1.005);
+  }
+}
+
+.afterCard::after {
+  content: "";
+  position: absolute;
+  right: 27px;
+  bottom: 18px;
+  width: 42px;
+  height: 1px;
+  background: #b49a7e;
+}
+
+.cardHeading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 18px;
+  color: #8b7969;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.afterCard .cardHeading { color: #987356; }
+.cardHeading img { flex: none; }
+.beforeCard p, .afterCard p { margin: 0; }
+.beforeCard p { max-width: 34ch; color: #76695d; font-size: clamp(15px, 1.05vw, 18px); line-height: 1.32; }
+.afterCard p { max-width: 39ch; padding-right: 15px; font-size: clamp(16px, 1.18vw, 21px); line-height: 1.28; letter-spacing: -.018em; }
+
+/* Mobile-only toggle. */
+.compareToggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #2b2115;
+  cursor: pointer;
+}
+
+.compareToggleIcon {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(83, 62, 45, 0.18);
+  border-radius: 50%;
+  background: rgba(83, 62, 45, 0.08);
+  font: 22px/1 Arial, sans-serif;
+  transition: transform .35s cubic-bezier(.22, 1, .36, 1), background .3s ease;
+}
+
+.compareToggle:hover .compareToggleIcon { background: rgba(83, 62, 45, 0.14); }
+.pair[data-comparing="true"] .compareToggleIcon { transform: rotate(45deg); }
+.compareToggle:focus-visible { outline: 2px solid #533e2d; outline-offset: 2px; border-radius: 50%; }
+
+@media (min-width: 751px) {
+  .compareToggle { display: none; }
+  .pair[data-revealed="true"] .afterCard { transition-delay: 0s; }
+}
+
+@keyframes card-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes clinic-card-reveal {
+  0% {
+    opacity: 0;
+    transform: translate3d(104%, 0, 0) scale(.985);
+  }
+  18% { opacity: 1; }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@media (max-width: 750px) {
+  /* Single-column grid for both upper and lower sections. */
+  .cards { grid-template-columns: minmax(0, 1fr); row-gap: 22px; }
+
+  /* Force every pair to full width of the single column. */
+  .cards > .pair,
+  .cards > .pair:nth-child(n) {
+    --reveal-delay: 0ms;
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-self: stretch;
+    padding-inline: 0;
+    padding-top: 0;
+    animation: none;
+  }
+
+  /* Tighter gap between the section title and the first pair. */
+  .stickyView > :global(.intro-title) {
+    margin-bottom: clamp(20px, 4vh, 32px);
+  }
+
+  /* Keep the gap between the upper and lower groups identical to the
+     row-gap used between pairs within each group. */
+  .lowerCards { margin-top: 22px; }
+
+  /* Stack stays a grid, both cards share the same cell. */
+  .cards > .pair .stack,
+  .cards > .pair[data-revealed="true"] .stack {
+    display: grid;
+    transform: none;
+    transition: none;
+  }
+
+  .cards > .pair .beforeCard {
+    grid-area: 1 / 1;
+    z-index: 0;
+    min-height: 148px;
+    padding: 17px 19px 62px;
+    background:
+      radial-gradient(circle at 16% -8%, #fffdf0cc 0%, transparent 44%),
+      linear-gradient(145deg, #f2e9dce8, #dfd1bfc7);
+    transition: none;
+  }
+
+  /* Reveal: the "after" card slides in from the right. */
+  .cards > .pair .afterCard {
+    grid-area: 1 / 1;
+    z-index: 1;
+    min-height: 100%;
+    padding: 17px 19px 48px;
+    border-color: #fff8e7d9;
+    background:
+      radial-gradient(circle at 14% -12%, #ffffffeb 0%, transparent 46%),
+      linear-gradient(135deg, #fffdf1ed 0%, #fff8e7df 54%, #eadbc9d9 100%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translate3d(104%, 0, 0) scale(.985);
+    transition: none;
+    backface-visibility: hidden;
+  }
+  .cards > .pair[data-revealed="true"] .afterCard {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  .cards > .pair[data-reveal-animating][data-revealed="true"] .afterCard {
+    background:
+      radial-gradient(circle at 14% -12%, #ffffffeb 0%, transparent 46%),
+      linear-gradient(135deg, #fffdf1 0%, #fff8e7 54%, #eadbc9 100%);
+    animation: clinic-card-reveal .9s cubic-bezier(.22, 1, .36, 1) both;
+  }
+
+  /* Lift each "before" card just past its own text, keeping the full copy
+     readable above the overlapping clinic card. */
+  .cards > .pair[data-comparing="true"] {
+    padding-top: var(--before-lift, 112px);
+  }
+  .cards > .pair[data-comparing="true"] .beforeCard {
+    transform: translateY(calc(-1 * var(--before-lift, 112px)));
+  }
+
+  .cards > .pair .beforeCard .cardHeading,
+  .cards > .pair .afterCard .cardHeading { margin-bottom: 12px; font-size: 10px; }
+  .cards > .pair .beforeCard p { font-size: 16px; line-height: 1.38; }
+  .cards > .pair .afterCard p { font-size: 17px; line-height: 1.38; }
+
+  /* Keep the comparison heading inside the narrow viewport, even when the
+     visual editor has stored a desktop width for the editable title. */
+  .stickyView > :global(.intro-title) {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: start;
+    max-width: 100%;
+  }
+  .stickyView > :global(.intro-title) > :global(img) {
+    float: none;
+    width: 24px;
+    height: 24px;
+    margin: 6px 0 0;
+  }
+  .stickyView > :global(.intro-title) :global(h2) {
+    grid-column: 2;
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100% !important;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pair { animation: none; }
+  .beforeCard,
+  .afterCard,
+  .pair[data-revealed="true"] .afterCard {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
+  .pair[data-comparing="true"] .beforeCard {
+    transform: translateY(calc(-1 * var(--before-lift, 112px)));
+  }
+}
+
+@media (max-width: 750px) and (prefers-reduced-motion: reduce) {
+  .cards > .pair[data-reveal-animating][data-revealed="true"] .afterCard {
+    animation: clinic-card-reveal .9s cubic-bezier(.22, 1, .36, 1) both !important;
+  }
+}

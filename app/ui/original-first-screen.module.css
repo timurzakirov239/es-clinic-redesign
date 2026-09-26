@@ -66,13 +66,13 @@
   .header .telegram .icon{width:27px;height:27px;}
 }
 @media (max-width:1024px){.headerInner{padding:18px 24px;}.left{gap:18px;}.address{display:none;}}
-@media (max-width:768px){.address{display:none;}}
+@media (max-width: 750px){.address{display:none;}}
 @media (max-width:560px){.headerInner{height:74px;padding:14px 16px;}.menuButton{width:auto;height:42px;padding:0 16px;font-size:12px;}.phone{font-size:14px;}.brand{width:24px;height:28px;}.social{width:42px;height:42px;}}
 @media (max-width:640px){
   .header{z-index:30;}
   .headerInner{justify-content:space-between;}
-  .left{order:2;}
-  .right{order:1;margin-left:0;}
+  .left{order:1;margin-left:0;}
+  .right{order:2;margin-left:auto;}
   .phone{display:none;}
   .social{display:inline-flex;}
 }
@@ -130,7 +130,7 @@
   .eyebrow{font-size:21px;}
   .content{max-width:70%;}
 }
-@media (max-width:768px){
+@media (max-width: 750px){
   .screen{min-height:auto;position:relative;z-index:auto;}
   .inner{position:static;}
   .content{position:static;width:auto;padding:118px 24px 20px;max-width:100%;}
@@ -170,7 +170,7 @@
 .screen, .header{--clmask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2023%2023%27%3E%3Cpath%20d%3D%27M19.3612%207.84705C18.3914%207.85021%2017.514%208.23688%2016.8657%208.85893V8.85578C15.5491%2010.0683%2013.9246%2010.6095%2012.1741%2010.8491C12.3863%209.08694%2012.8959%207.44882%2014.1064%206.11541H14.1032C14.7211%205.46289%2015.1015%204.58236%2015.0983%203.61252C15.091%201.60978%2013.4623%20-0.00733028%2011.4595%202.49919e-05C9.45681%200.00738027%207.8397%201.63605%207.84705%203.63879C7.85021%204.60863%208.23688%205.48601%208.85893%206.13433H8.85578C10.0694%207.45092%2010.6095%209.07538%2010.8491%2010.8259C9.08694%2010.6137%207.44882%2010.1041%206.11541%208.89361V8.89676C5.46289%208.27891%204.58236%207.89854%203.61252%207.90169C1.60978%207.90905%20-0.00733028%209.53772%202.49919e-05%2011.5405C0.00738027%2013.5432%201.63605%2015.1603%203.63879%2015.1529C4.60863%2015.1498%205.48601%2014.7631%206.13433%2014.1411V14.1442C7.45092%2012.9317%209.07539%2012.3905%2010.8259%2012.1509C10.6137%2013.9131%2010.1041%2015.5512%208.89361%2016.8846H8.89676C8.27891%2017.5371%207.89854%2018.4176%207.90169%2019.3875C7.90905%2021.3902%209.53772%2023.0073%2011.5405%2023C13.5432%2022.9926%2015.1603%2021.364%2015.1529%2019.3612C15.1498%2018.3914%2014.7631%2017.514%2014.1411%2016.8657H14.1442C12.9317%2015.5491%2012.3905%2013.9246%2012.1509%2012.1741C13.9131%2012.3863%2015.5522%2012.8959%2016.8846%2014.1064V14.1032C17.5371%2014.7211%2018.4176%2015.1015%2019.3875%2015.0983C21.3902%2015.091%2023.0073%2013.4623%2023%2011.4595C22.9916%209.45681%2021.3629%207.8397%2019.3612%207.84705Z%27%20fill%3D%27black%27/%3E%3C/svg%3E");}
 @media (max-width:560px){.brand{width:36px;height:41px;}
 }
-@media (max-width:768px){
+@media (max-width: 750px){
   .header:not(.dark)::before{background:linear-gradient(180deg,rgba(254,245,228,.96) 0%,rgba(254,245,228,.55) 45%,rgba(254,245,228,0) 100%);}
   .header:not(.dark) .menuButton, .header:not(.dark) .social{color:#533E2D!important;background:rgba(83,62,45,.05);border-color:rgba(83,62,45,.22);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;}
   .header:not(.dark) .social svg, .header:not(.dark) .social path{fill:#533E2D!important;}
@@ -178,7 +178,7 @@
   .header:not(.dark) .burger span{background:#533E2D!important;}
   .header:not(.dark) .phone, .header:not(.dark) .address{color:#533E2D;}
 }
-@media (min-width:769px){
+@media (min-width: 751px){
   .header::before, .dark::before{background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 100%);}
   .dark, .dark .address, .dark .phone{color:#FEF5E4;}
   .dark .burger span{background:#FEF8E8;}
@@ -196,7 +196,7 @@
   color:var(--cream);
   -webkit-font-smoothing:antialiased;
   /* Hero-фото (Tilda CDN) */
-  background:#4b4034 url('/assets/original-first-screen/1d6c2900267b6b8d.png') center/cover no-repeat;
+  background:#4b4034 url('/assets/original-first-screen/hero.webp') center/cover no-repeat;
 }
 .screen::after{
   content:"";position:absolute;inset:0;z-index:1;
@@ -217,7 +217,7 @@
   box-shadow:0 20px 50px rgba(0,0,0,.18);
 }
 .mobileMark, .mobilePhoto{display:none;}
-@media (max-width:768px){
+@media (max-width: 750px){
   .screen{min-height:auto;position:relative;z-index:auto;background:#FEF8E8;}
   .screen::after{display:none;}
   .inner{position:static;display:flex;flex-direction:column;align-items:center;text-align:center;padding:84px 20px 0;}
@@ -233,7 +233,7 @@
   .title path{fill:#533E2D;}
   .tagline{display:none;}
   .mobilePhoto{order:5;width:100vw;height:clamp(380px,96vw,500px);border-radius:0;overflow:hidden;
-    background:#4b4034 url('/assets/original-first-screen/1d6c2900267b6b8d.png') center/cover no-repeat;}
+    background:#4b4034 url('/assets/original-first-screen/hero.webp') center/cover no-repeat;}
   .avatars{order:6;justify-content:center;margin:-74px 0 26px;position:relative;z-index:2;}
   .header::before{display:none;}
   .header .menuButton, .header .social{background:rgba(83,62,45,.05);border:1px solid rgba(83,62,45,.10);color:#533E2D;box-shadow:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
@@ -249,7 +249,7 @@
   -webkit-backdrop-filter:blur(7px) saturate(120%) brightness(104%);backdrop-filter:blur(7px) saturate(120%) brightness(104%);
   border:1px solid rgba(255,255,255,.30);
   box-shadow:0 20px 50px rgba(0,0,0,.18);}
-@media (min-width:769px){
+@media (min-width: 751px){
   .menuButton, .social{-webkit-backdrop-filter:blur(7px) saturate(140%);backdrop-filter:blur(7px) saturate(140%);}
 }
 .decoration{
@@ -262,7 +262,7 @@
   .card{-webkit-backdrop-filter:blur(7px) url(#esc-glass) saturate(120%) brightness(104%);backdrop-filter:blur(7px) url(#esc-glass) saturate(120%) brightness(104%);}
   .decoration::before{
     -webkit-backdrop-filter:blur(7px) url(#esc-glass2) saturate(115%) brightness(104%);backdrop-filter:blur(7px) url(#esc-glass2) saturate(115%) brightness(104%);}
-  @media (min-width:769px){
+  @media (min-width: 751px){
     .menuButton, .social{-webkit-backdrop-filter:blur(7px) url(#esc-glass) saturate(140%);backdrop-filter:blur(7px) url(#esc-glass) saturate(140%);}}
 }
 .avatars{cursor:default;}
@@ -293,10 +293,10 @@
 }
 .cta:hover{background:rgba(254,245,228,.14);transform:translateY(-2px);}
 .cta svg{width:15px;height:15px;flex:0 0 auto;display:block;}
-@media (min-width:769px) and (max-width:900px){
+@media (min-width: 751px) and (max-width:900px){
   .cta{width:auto;padding:0 20px;height:40px;font-size:14px;gap:8px;}
 }
-@media (max-width:768px){
+@media (max-width: 750px){
   .tagrow{display:contents;}
   .cta{order:7;width:260px;height:45px;border-radius:200px;margin:16px 0 40px;
     background:rgba(83,62,45,.05);border:1px solid rgba(83,62,45,.1);
@@ -325,25 +325,55 @@
 .menu {position:absolute;top:100%;left:64px;background:#fef5e4;color:#533e2d;padding:24px;min-width:240px;}
 .menu[hidden]{display:none;}
 .menu a{display:block;padding:12px;font-size:18px;}
-@media(max-width:768px){.screen{position:relative;} .social{display:none;} .title img {filter:brightness(0) saturate(100%) invert(24%) sepia(15%) saturate(1166%) hue-rotate(345deg) brightness(94%) contrast(87%);} }
+@media(max-width: 750px){.screen{position:relative;} .social{display:none;} .title img {filter:brightness(0) saturate(100%) invert(24%) sepia(15%) saturate(1166%) hue-rotate(345deg) brightness(94%) contrast(87%);} }
 
 @font-face{font-family:'Geologica';src:url('/assets/official-geologica.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
 .header{font-size:16px;}
-@media(max-width:768px){.screen{min-height:auto;} .menu{left:16px;right:16px;} }
+@media(max-width: 750px){.screen{min-height:auto;} .menu{left:16px;right:16px;} }
 
 .mobileContact{display:none;}
-@media(max-width:768px){.brand img{filter:brightness(0) saturate(100%) invert(59%) sepia(13%) saturate(466%) hue-rotate(345deg) brightness(94%);} .mobileMark img{filter:brightness(0) saturate(100%) invert(72%) sepia(22%) saturate(746%) hue-rotate(341deg) brightness(94%) contrast(89%);} }
+@media(max-width: 750px){.brand img{filter:brightness(0) saturate(100%) invert(59%) sepia(13%) saturate(466%) hue-rotate(345deg) brightness(94%);} .mobileMark img{filter:brightness(0) saturate(100%) invert(72%) sepia(22%) saturate(746%) hue-rotate(341deg) brightness(94%) contrast(89%);} }
+
+/* Hold the first screen still while the following section slides over it. */
+.overlapShell { height: 200svh; }
+.overlapShell .screen { position: sticky; top: 0; z-index: 0; height: 100svh; min-height: 100svh; }
+@media(max-width: 750px){
+  .overlapShell { height: auto; }
+  .overlapShell .screen { position: relative; height: auto; min-height: 0; }
+}
 @media(max-width:430px){.mobileContact{display:flex;color:#533e2d;width:32px;height:32px;align-items:center;justify-content:center;} .mobileContact svg{width:24px;height:24px;} }
 
-@media(max-width:430px){.mobileContact{display:block;position:relative;width:38px;height:38px;} .mobileContact summary{display:flex;align-items:center;justify-content:center;width:38px;height:38px;padding:6px;cursor:pointer;list-style:none;} .mobileContact summary::-webkit-details-marker{display:none;} .mobileContact svg{width:26px;height:26px;} .contactMenu{position:absolute;left:0;top:calc(100% + 10px);padding:12px;background:#FEF5E4;border:1px solid rgba(83,62,45,.15);border-radius:16px;min-width:160px;box-shadow:0 10px 30px #0002;} .contactMenu a{display:block;padding:10px 12px;font-size:16px;}}
+@media(max-width:430px){.mobileContact{display:block;position:relative;width:38px;height:38px;} .mobileContact summary{display:flex;align-items:center;justify-content:center;width:38px;height:38px;padding:6px;cursor:pointer;list-style:none;} .mobileContact summary::-webkit-details-marker{display:none;} .mobileContact svg{width:26px;height:26px;} .contactMenu{position:absolute;left:auto;right:0;top:calc(100% + 10px);padding:12px;background:#FEF5E4;border:1px solid rgba(83,62,45,.15);border-radius:16px;min-width:160px;box-shadow:0 10px 30px #0002;} .contactMenu a{display:block;padding:10px 12px;font-size:16px;}}
 
 .eyebrow{white-space:normal;}
 .title{margin:0;font-size:32px;font-weight:700;line-height:normal;}
 .card p{white-space:normal;}
 .avatars .avatar[data-doc="2"] img{object-position:50% 60%;}
-@media(max-width:768px){.eyebrow{white-space:pre-line;} .screen h1{margin:0 0 26px;}}
+@media(max-width: 750px){.eyebrow{white-space:pre-line;} .screen h1{margin:0 0 26px;}}
 .screen[data-hero-ready], .header[data-hero-ready]{transition:opacity .18s ease;}
 .screen[data-hero-ready="false"], .header[data-hero-ready="false"]{opacity:0;visibility:hidden;}
+.header.sceneHeader { color: #fef5e4; background: transparent; }
+.header.sceneHeader::before { display: block; background: linear-gradient(180deg, rgba(24,18,12,.6), rgba(24,18,12,0)); }
+.header.sceneHeader .address, .header.sceneHeader .phone, .header.sceneHeader .menuButton, .header.sceneHeader .social { color: #fef5e4 !important; }
+.header.sceneHeader .burger span { background: #fef5e4 !important; }
+.header.sceneHeader .social { border-color: rgba(254,245,228,.45) !important; }
+.header.sceneHeader .brand img { filter: none; }
+.header.sceneHeader .mobileContact { color: #fef5e4; }
+@media (max-width: 750px) {
+  .header.contractHeader {
+    color: #fef5e4;
+    background: transparent;
+  }
+  .header.contractHeader::before { display: none; }
+  .header.contractHeader .address,
+  .header.contractHeader .phone,
+  .header.contractHeader .menuButton,
+  .header.contractHeader .social,
+  .header.contractHeader .mobileContact { color: #fef5e4 !important; }
+  .header.contractHeader .burger span { background: #fef5e4 !important; }
+  .header.contractHeader .social { border-color: rgba(254,245,228,.45) !important; }
+  .header.contractHeader .brand img { filter: none; }
+}
 .drawer{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;color:#fef5e4;overflow:hidden;font-family:'Aeroport',Arial,sans-serif;}
 .drawer::backdrop{background:rgba(46,42,36,.38);transition:background .32s ease;}
 .drawer[data-expanded="false"]::backdrop{background:transparent;}

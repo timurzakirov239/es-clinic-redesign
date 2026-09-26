@@ -1,0 +1,37 @@
+# Local source videos and design experiments are not used by the live site.
+/*.mp4
+/artifacts/
+/test-results/
+/app/island-lab-v2/
+/app/care-concepts/
+/comparison-concepts/
+/mfo-concepts/
+/public/tree-lab/
+/public/island-lab/
+/public/care-concepts/
+/public/assets/tree-storyboard/
+/public/assets/tree-storyboard-v2/
+/public/assets/tree-video-anchors/
+
+# Earlier tree iterations. The active 1080p source is kept for comparison
+# in the deployed video lab; desktop/mobile packs and worker remain available.
+/public/contract-tree/botanical-closeup/
+/public/contract-tree/botanical-closeup-hd/
+/public/contract-tree/cropped/
+/public/contract-tree/current/
+/public/contract-tree/current-24fps/
+/public/contract-tree/current-preview-atlas/
+/public/contract-tree/current-preview-atlas-mobile/
+/public/contract-tree/current-preview-atlas-mobile-crop/
+/public/contract-tree/documentary-growth/
+/public/contract-tree/new-growth/
+/public/contract-tree/new-growth-keyed/
+/public/contract-tree/new-tree/
+/public/contract-tree/new-tree-clean/
+/public/contract-tree/packed-full/
+/public/contract-tree/packed-1080-v2-fast/
+/public/contract-tree/packed-1080-v2-mobile-fast/
+/public/contract-tree/tree-growth-test-av1.webm
+/public/contract-tree/source-quality/
+/public/contract-tree/sprout-to-tree/
+/public/contract-tree/sprout-to-tree-hd/

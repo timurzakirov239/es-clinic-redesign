@@ -61,8 +61,8 @@
 :global(.picking) .avatar,:global(.picking) .more,:global(.picking) .more::after { animation-play-state: paused; }
 .mobileMark,.mobilePhoto { display: none; }
 @media (max-width: 1024px) { .headerInner { padding: 18px 24px; } .address { display: none; } .eyebrow { font-size: 21px; } .content { max-width: 70%; } }
-@media (min-width: 769px) and (max-width: 900px) { .cta { width: auto; padding-inline: 20px; height: 40px; font-size: 14px; } }
-@media (max-width: 768px) {
+@media (min-width: 751px) and (max-width: 900px) { .cta { width: auto; padding-inline: 20px; height: 40px; font-size: 14px; } }
+@media (max-width: 750px) {
   .screen { height: auto; min-height: 0; background: #fef8e8; }
   .screen::after,.photo,.decoration { display: none; }
   .inner { position: static; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 84px 20px 0; }

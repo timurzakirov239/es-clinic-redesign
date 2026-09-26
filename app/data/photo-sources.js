@@ -1,5 +1,8 @@
 export function photoSource(name) {
-  if (['hero', 'reception', 'clinic', 'history', 'frolov', 'utin'].includes(name)) {
+  if (name === 'reception') {
+    return '/assets/reception-lobby.png';
+  }
+  if (['hero', 'clinic', 'history', 'frolov', 'utin'].includes(name)) {
     return `/assets/enhanced/${name}.webp`;
   }
   if (['tishina', 'sorokin', 'maksakov'].includes(name)) {

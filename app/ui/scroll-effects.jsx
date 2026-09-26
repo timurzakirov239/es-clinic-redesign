@@ -11,8 +11,10 @@ export function ScrollEffects() {
     const counters = new Map();
     const frames = new Set();
     let stopped = false;
-    const elements = [...document.querySelectorAll("main .section [data-edit-kind='text'], main .section [data-edit-kind='photo'], main .section details, main .loyalty [data-edit-kind], .partner-grid > div, footer")]
-      .filter(el => !el.parentElement.closest("[data-edit-kind], details"));
+    let processFrame = 0;
+    const pendingProcessRows = new Set();
+    const elements = [...document.querySelectorAll("main .section [data-edit-kind='text'], main .section [data-edit-kind='photo'], main .section details:not(.process-step), main .process-list > li, main .loyalty [data-edit-kind], .partner-grid > div")]
+      .filter(el => !el.closest("#comparison, .review-details-content") && !el.parentElement.closest("[data-edit-kind], details"));
     const observer = new IntersectionObserver(entries => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
@@ -22,20 +24,59 @@ export function ScrollEffects() {
     }, { threshold: 0.12, rootMargin: "0px 0px -7% 0px" });
     for (const el of elements) {
       // Progressive enhancement: keep the initial viewport and SSR content visible.
-      if (el.getBoundingClientRect().top < window.innerHeight) continue;
+      const processRow = el.parentElement.classList.contains("process-list");
+      if (!processRow && el.getBoundingClientRect().top < window.innerHeight) continue;
       const siblings = [...el.parentElement.children].filter(child => elements.includes(child));
       const delay = Math.min(siblings.indexOf(el) * 90, 450);
       const photo = el.dataset.editKind === "photo";
-      const animation = el.animate([
-        { opacity: 0, transform: `translateY(${el.tagName === "FOOTER" ? 80 : 30}px)${photo ? " scale(1.05)" : ""}` },
+      // Reveal the timeline from its left edge, so the guide precedes each offset card.
+      // Animate a mask rather than width: text and accordion geometry remain stable.
+      const keyframes = processRow ? [
+        { clipPath: "inset(0 100% 0 0)" },
+        { clipPath: "inset(0 0% 0 0)" },
+      ] : [
+        { opacity: 0, transform: `translateY(30px)${photo ? " scale(1.05)" : ""}` },
         { opacity: 1, transform: "none" },
-      ], { duration: el.tagName === "FOOTER" ? 1100 : 1000, delay, easing: "cubic-bezier(.22,1,.36,1)", fill: "both" });
+      ];
+      const animation = el.animate(keyframes, {
+        duration: processRow ? 900 : 1000,
+        delay: processRow ? 0 : delay,
+        easing: "cubic-bezier(.22,1,.36,1)",
+        fill: "both",
+      });
       animation.pause();
       animation.currentTime = 0;
       animation.onfinish = () => animation.cancel();
       animations.set(el, animation);
-      observer.observe(el);
+      if (processRow) pendingProcessRows.add(el);
+      else observer.observe(el);
     }
+    // Clip-path hides a row from IntersectionObserver, so use its unchanged
+    // layout box to start the reveal only when that particular row is visible.
+    const revealVisibleProcessRows = () => {
+      if (stopped) return;
+      const revealLine = window.innerHeight * 0.98;
+      for (const row of pendingProcessRows) {
+        const bounds = row.getBoundingClientRect();
+        if (bounds.bottom < 0) {
+          animations.get(row)?.cancel();
+          pendingProcessRows.delete(row);
+        } else if (bounds.top <= revealLine && bounds.bottom > 0) {
+          animations.get(row)?.play();
+          pendingProcessRows.delete(row);
+        }
+      }
+    };
+    const scheduleProcessCheck = () => {
+      if (processFrame || !pendingProcessRows.size) return;
+      processFrame = requestAnimationFrame(() => {
+        processFrame = 0;
+        revealVisibleProcessRows();
+      });
+    };
+    window.addEventListener("scroll", scheduleProcessCheck, { passive: true, capture: true });
+    window.addEventListener("resize", scheduleProcessCheck);
+    scheduleProcessCheck();
     const countObserver = new IntersectionObserver(entries => {
       for (const entry of entries) {
         if (!entry.isIntersecting || stopped) continue;
@@ -68,6 +109,9 @@ export function ScrollEffects() {
       stopped = true;
       observer.disconnect();
       countObserver.disconnect();
+      window.removeEventListener("scroll", scheduleProcessCheck, true);
+      window.removeEventListener("resize", scheduleProcessCheck);
+      cancelAnimationFrame(processFrame);
       animations.forEach(animation => animation.cancel());
       frames.forEach(id => cancelAnimationFrame(id));
       frames.clear();

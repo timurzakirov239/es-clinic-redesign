@@ -1,6 +1,7 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { useId, useRef, useState, useEffect } from "react";
 import Image from "next/image";
+import { Editable } from "./editor";
 
 export function ProcessStep({ heading, children, variant = "process" }) {
   const detailsRef = useRef(null);
@@ -26,7 +27,7 @@ export function ProcessStep({ heading, children, variant = "process" }) {
     }
     const animation = content.animate(
       [{ height: `${from}px`, opacity }, { height: `${to}px`, opacity: opening ? 1 : 0 }],
-      { duration: variant === "process" ? 480 : 560, easing: "cubic-bezier(.22, 1, .36, 1)", fill: "both" },
+      { duration: 650, easing: "cubic-bezier(.42, 0, .58, 1)", fill: "both" },
     );
     animationRef.current = animation;
     animation.onfinish = () => {
@@ -43,6 +44,30 @@ export function ProcessStep({ heading, children, variant = "process" }) {
       </summary>
       <div className={variant === "process" ? "process-content" : "faq-content"} ref={contentRef}><div className={variant === "contract" ? "contract-answer" : variant === "process" ? "process-description" : "faq-answer"}>{children}</div></div>
     </details>
+  );
+}
+
+export function ReviewDetails({ children }) {
+  const [open, setOpen] = useState(false);
+  const contentId = useId();
+
+  return (
+    <div className="review-details" data-expanded={open}>
+      <button className="review-toggle" type="button" aria-expanded={open} aria-controls={contentId}
+        aria-label={open ? "Свернуть отзыв" : "Читать отзыв полностью"}
+        onClick={() => setOpen(!open)}>
+        <span className="review-toggle-label" aria-hidden="true">
+          <span className="review-read">Читать отзыв полностью</span>
+          <span className="review-close">Свернуть отзыв</span>
+        </span>
+        <span className="review-expand" aria-hidden="true">+</span>
+      </button>
+      <div className="review-details-content" id={contentId} aria-hidden={!open} inert={!open}>
+        <div className="review-details-content-inner">
+          <div className="review-details-copy">{children}</div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -96,39 +121,273 @@ export function SiteHeader() {
 }
 
 export function VideoCard() {
+  const videoRef = useRef(null);
+  const frameCallbackRef = useRef(null);
+  const [mode, setMode] = useState("idle");
+  const [posterVisible, setPosterVisible] = useState(true);
+  const [mobile, setMobile] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [muted, setMuted] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 750px)");
+    const update = () => setMobile(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  const showFirstVideoFrame = (video) => {
+    if (frameCallbackRef.current !== null && video.cancelVideoFrameCallback) {
+      video.cancelVideoFrameCallback(frameCallbackRef.current);
+    }
+    if (video.requestVideoFrameCallback) {
+      frameCallbackRef.current = video.requestVideoFrameCallback(() => {
+        frameCallbackRef.current = null;
+        setPosterVisible(false);
+      });
+    } else {
+      requestAnimationFrame(() => requestAnimationFrame(() => setPosterVisible(false)));
+    }
+  };
+
+  const playPreview = () => {
+    if (mode === "engaged") return;
+    const video = videoRef.current;
+    video.muted = true;
+    setMode("preview");
+    video.play().then(() => showFirstVideoFrame(video)).catch(() => {});
+  };
+
+  const stopPreview = () => {
+    if (mode !== "preview") return;
+    videoRef.current?.pause();
+    setMode("idle");
+  };
+
+  const enableSound = () => {
+    const video = videoRef.current;
+    video.muted = false;
+    setMode("engaged");
+    video.play().then(() => showFirstVideoFrame(video)).catch(() => {});
+  };
+
+  const togglePlayback = () => {
+    if (mode !== "engaged") return;
+    const video = videoRef.current;
+    if (video.paused) video.play().catch(() => {});
+    else video.pause();
+  };
+
+  const toggleMute = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = !video.muted;
+    setMuted(video.muted);
+  };
+
+  const toggleFullscreen = async () => {
+    const video = videoRef.current;
+    const card = video?.closest(".video-card");
+    if (!video || !card) return;
+
+    if (document.fullscreenElement === card || video.webkitDisplayingFullscreen) {
+      if (document.exitFullscreen) await document.exitFullscreen().catch(() => {});
+      else video.webkitExitFullscreen?.();
+      return;
+    }
+
+    if (card.requestFullscreen) {
+      try {
+        await card.requestFullscreen();
+        return;
+      } catch {}
+    }
+    video.webkitEnterFullscreen?.();
+  };
+
+  const seekVideo = (event) => {
+    const video = videoRef.current;
+    if (!video) return;
+    const time = Number(event.target.value);
+    video.currentTime = time;
+    setCurrentTime(time);
+  };
+
+  const formatTime = (time) => {
+    if (!Number.isFinite(time)) return "0:00";
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60).toString().padStart(2, "0");
+    return `${minutes}:${seconds}`;
+  };
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const card = video.closest(".video-card");
+    const updateFullscreen = () => {
+      setFullscreen(document.fullscreenElement === card || Boolean(video.webkitDisplayingFullscreen));
+    };
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    video.addEventListener("webkitbeginfullscreen", updateFullscreen);
+    video.addEventListener("webkitendfullscreen", updateFullscreen);
+    return () => {
+      document.removeEventListener("fullscreenchange", updateFullscreen);
+      video.removeEventListener("webkitbeginfullscreen", updateFullscreen);
+      video.removeEventListener("webkitendfullscreen", updateFullscreen);
+    };
+  }, []);
+
+  useEffect(() => () => {
+    const video = videoRef.current;
+    if (frameCallbackRef.current !== null && video?.cancelVideoFrameCallback) {
+      video.cancelVideoFrameCallback(frameCallbackRef.current);
+    }
+  }, []);
+
   return (
-    <div className="video-card">
-      {playing ? (
-        <video
-          src="/assets/daria-tishina-web.mp4"
-          controls
-          autoPlay
-          playsInline
-          preload="none"
-          aria-label="Дарья Тишина о Медицинском Family Office"
-        />
-      ) : (
-        <>
-          <Image
-            src="/assets/daria-enhanced.webp"
-            unoptimized
-            alt="Дарья Сергеевна Тишина"
-            fill
-            sizes="(max-width: 760px) 90vw, 420px"
-          />
+    <div
+      className="video-card"
+      data-layout-id="video-card"
+      data-mode={mode}
+      onMouseEnter={playPreview}
+      onMouseLeave={stopPreview}
+    >
+      <video
+        ref={videoRef}
+        src="/assets/daria-tishina-web.mp4"
+        controls={false}
+        playsInline
+        preload="none"
+        aria-label={mobile && mode === "engaged"
+          ? `${playing ? "Приостановить" : "Продолжить"} видео с Дарьей Тишиной`
+          : "Дарья Тишина о Медицинском Family Office"}
+        role={mobile && mode === "engaged" ? "button" : undefined}
+        tabIndex={mobile && mode === "engaged" ? 0 : undefined}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
+        onDurationChange={(event) => setDuration(event.currentTarget.duration)}
+        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+        onClick={togglePlayback}
+        onKeyDown={(event) => {
+          if (!mobile || mode !== "engaged" || (event.key !== "Enter" && event.key !== " ")) return;
+          event.preventDefault();
+          togglePlayback();
+        }}
+      />
+      <Image
+        className={`video-poster${posterVisible ? "" : " is-hidden"}`}
+        src="/assets/daria-poster.webp"
+        unoptimized
+        alt="Дарья Сергеевна Тишина"
+        fill
+        sizes="(max-width: 750px) 90vw, 403px"
+      />
+      <div className={`video-shade${posterVisible ? "" : " is-hidden"}`} aria-hidden="true" />
+      {mode === "engaged" && (
+        <div className="video-controls" role="group" aria-label="Управление видео">
+          <div className="video-controls-seek">
+            <input
+              type="range"
+              min="0"
+              max={duration || 0}
+              step="0.1"
+              value={Math.min(currentTime, duration || 0)}
+              onChange={seekVideo}
+              aria-label="Позиция видео"
+              disabled={!duration}
+            />
+            <span aria-live="off">{formatTime(currentTime)} / {formatTime(duration)}</span>
+          </div>
+          <div className="video-controls-buttons">
+            <button
+              type="button"
+              onClick={togglePlayback}
+              aria-label={playing ? "Приостановить видео" : "Продолжить видео"}
+            >
+              {playing ? (
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h3v14H8zM15 5h3v14h-3z" fill="currentColor" /></svg>
+              ) : (
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" fill="currentColor" /></svg>
+              )}
+            </button>
+            <div className="video-controls-right">
+                <button
+                  type="button"
+                  onClick={toggleMute}
+                  aria-label={muted ? "Включить звук" : "Выключить звук"}
+                >
+                  {muted ? (
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3Z" fill="currentColor" /><path d="m16 9 5 6m0-6-5 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3Z" fill="currentColor" /><path d="M15 9a4.5 4.5 0 0 1 0 6m2.5-9a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                  )}
+                </button>
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                aria-label={fullscreen ? "Выйти из полноэкранного режима" : "На весь экран"}
+              >
+                {fullscreen ? (
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4m11-5v5h5M9 20v-5H4m11 5v-5h5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5m6 0h5v5M4 15v5h5m6 0h5v-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {mode !== "engaged" && (
           <button
             className="video-play"
-            onClick={() => setPlaying(true)}
+            onClick={enableSound}
             aria-label="Смотреть видео с Дарьей Тишиной"
           >
             <span aria-hidden="true">▶</span>
           </button>
-          <div className="video-caption">
-            Дарья Тишина<span>Медицинский директор ЕС Клиники</span>
-          </div>
-        </>
       )}
+      <div className={`video-caption${posterVisible ? "" : " is-hidden"}`}>
+        Дарья Тишина<span>Медицинский директор ЕС Клиники</span>
+      </div>
+    </div>
+  );
+}
+export function ConsultationLeadForm() {
+  const [status, setStatus] = useState("");
+  const submit = (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!form.reportValidity()) return;
+    setStatus("Форма заполнена. Для отправки заявки напишите нам в Telegram или позвоните по номеру +7 (495) 868-18-57.");
+  };
+  return (
+    <div className="consultation-lead-form">
+      <div className="consultation-lead-inner">
+        <Editable id="consultation-lead-title" as="h2" className="consultation-lead-title">
+          Оставьте заявку — мы расскажем, как устроено системное ведение здоровья семьи
+        </Editable>
+        <form onSubmit={submit}>
+          <input className="consultation-lead-field" type="text" name="name" placeholder="Ваше имя" autoComplete="name" maxLength="60" required />
+          <input className="consultation-lead-field" type="tel" name="phone" placeholder="Ваш номер телефона" autoComplete="tel" inputMode="tel" required />
+          <label className="consultation-lead-agree">
+            <input className="consultation-lead-checkbox" type="checkbox" name="agree" required />
+            <span className="consultation-lead-checkmark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l5 5L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
+          <span>Подтверждаю, что согласен <a href="/consent-data">с условиями использования персональных данных</a> и с <a href="/legal">пользовательским соглашением</a></span>
+          </label>
+          <button className="consultation-lead-submit" type="submit">Получить консультацию<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+        </form>
+        {status && <p className="consultation-lead-status" role="status">{status}</p>}
+        <p className="consultation-lead-or">Или напишите нам в мессенджер</p>
+        <div className="consultation-lead-messengers">
+          <a href="https://telegram.me/esclinic_bot" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.27 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" /></svg></a>
+          <a href="https://wa.me/79671330849" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-1.76-.89-2.92-1.59-4.08-3.59-.31-.53.31-.49.89-1.63.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35ZM12.05 21.79h-.01a9.88 9.88 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26C2.17 6.44 6.6 2.01 12.06 2.01c2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.89-9.89 9.89Z" /></svg></a>
+        </div>
+      </div>
     </div>
   );
 }

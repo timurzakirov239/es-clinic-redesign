@@ -1,6 +1,8 @@
 node_modules/
+artifacts/
 .next/
 .next-hero-rebuild/
+.next-contract-scroll-preview/
 test-results/
 *.log
 .env*.local
@@ -10,3 +12,4 @@ test-results/
 
 .vercel
 /*.png
+.env*

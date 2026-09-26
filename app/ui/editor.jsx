@@ -5,6 +5,7 @@ import Image from "next/image";
 import { photoSource } from '../data/photo-sources';
 const Context = createContext(null);
 const STORAGE = "es-clinic-next-document-v1";
+const FIXED_STORAGE = "es-clinic-next-fixed-layout-v1";
 const gallery = [
   "hero",
   "family",
@@ -105,6 +106,10 @@ function validate(data) {
     }
     result[id] = clean;
   }
+  // Keep drafts made before the video card received a stable layout id.
+  if (result["node-1-4-1"] && !result["video-card"])
+    result["video-card"] = result["node-1-4-1"];
+  delete result["node-1-4-1"];
   return result;
 }
 export function EditorProvider({ children }) {
@@ -142,6 +147,7 @@ export function EditorProvider({ children }) {
             registry.current.set(id, {
               type: "element",
               label:
+                element.dataset.editorLabel ||
                 element.getAttribute("aria-label") ||
                 element.getAttribute("alt") ||
                 `${element.tagName.toLowerCase()} · ${(element.textContent || "").trim().slice(0, 55)}`,
@@ -310,6 +316,16 @@ export function EditorProvider({ children }) {
     a.download = "es-clinic-next-draft.json";
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  const fixCurrentView = () => {
+    try {
+      const clean = validate(changes);
+      localStorage.setItem(STORAGE, JSON.stringify(clean));
+      localStorage.setItem(FIXED_STORAGE, JSON.stringify(clean));
+      setMessage("Текущий вид закреплён и будет применяться без скачка.");
+    } catch {
+      setMessage("Не удалось закрепить текущий вид в этом браузере.");
+    }
   };
   const importDraft = async (e) => {
     const file = e.target.files?.[0];
@@ -701,6 +717,9 @@ export function EditorProvider({ children }) {
             </p>
           )}
           <div className="editor-actions">
+            <button className="editor-fix-view" onClick={fixCurrentView}>
+              Зафиксировать вид без скачка
+            </button>
             <button onClick={exportDraft}>Экспорт JSON</button>
             <label className="import-label">
               Импорт JSON
@@ -716,6 +735,7 @@ export function EditorProvider({ children }) {
                 if (
                   window.confirm("Удалить все изменения этой новой версии?")
                 ) {
+                  localStorage.removeItem(FIXED_STORAGE);
                   setChanges({});
                   setMessage("Восстановлен текст документа.");
                 }
@@ -818,7 +838,7 @@ export function EditablePhoto({
         src={finalSrc}
         alt={alt}
         fill
-        sizes={priority ? "100vw" : "(max-width: 760px) 100vw, 50vw"}
+        sizes={priority ? "100vw" : "(max-width: 750px) 100vw, 50vw"}
         preload={priority}
         quality={90}
         loading={priority ? undefined : "lazy"}

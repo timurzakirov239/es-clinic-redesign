@@ -6,7 +6,7 @@ import styles from "./comparison-scroll.module.css";
 
 const FLIP_DURATION = 460;
 const DESKTOP_REVEAL_INTERVAL = 700;
-const MOBILE_REVEAL_INTERVAL = 980;
+const MOBILE_REVEAL_INTERVAL = 620;
 
 const ScrollPairCard = memo(function ScrollPairCard({ item, answer, index, revealed }) {
   const pairRef = useRef(null);
@@ -197,7 +197,14 @@ export function ScrollComparisonReveal({ before, after, heading }) {
     const mobileQueued = new Set();
 
     const revealMobileNext = () => {
-      const card = mobileQueue.shift();
+      let card = mobileQueue.shift();
+      while (card) {
+        const rect = card.getBoundingClientRect();
+        const inViewport = rect.bottom > 0 && rect.top < window.innerHeight;
+        if (inViewport) break;
+        mobileQueued.delete(Number(card.dataset.pairIndex));
+        card = mobileQueue.shift();
+      }
       if (!card) {
         revealTimer = 0;
         return;

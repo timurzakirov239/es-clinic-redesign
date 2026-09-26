@@ -152,15 +152,15 @@
 
 @media (max-width: 750px) {
   .journey {
-    background-color: #6d5d4d;
+    background-color: #716e69;
     background-image:
-      linear-gradient(90deg, #3e2d204d, #3e2d2012 72%),
-      linear-gradient(180deg, #3e2d2040, #3e2d202d),
+      linear-gradient(90deg, #34333159, #47444126 72%),
+      linear-gradient(180deg, #47444145, #34323038),
       url("/assets/official-footer-building.webp");
-    background-size: 100% 100%, 100% 100%, auto 100svh;
-    background-position: center, center, center top;
-    background-repeat: no-repeat, no-repeat, repeat-y;
-    background-attachment: scroll;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
   .content { width: 100%; padding: 96px 20px 82px; }
   .intro { margin-bottom: 30px; }
@@ -177,25 +177,6 @@
   .panelHeading { min-height: 54px; }
   .panelTitle { font-size: 25px; }
   .panelExpand { width: 36px; height: 36px; font-size: 24px; }
-  .panelDetails {
-    grid-template-rows: 1fr;
-    visibility: hidden;
-    opacity: 0;
-    transform: translateY(12px);
-    pointer-events: none;
-    transition:
-      opacity var(--disclosure-duration) var(--disclosure-easing),
-      transform var(--disclosure-duration) var(--disclosure-easing),
-      visibility 0s linear var(--disclosure-duration);
-  }
-  .panel[data-expanded="true"] .panelDetails {
-    grid-template-rows: 1fr;
-    visibility: visible;
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-    transition-delay: 0s;
-  }
   .services { grid-template-columns: 1fr; gap: 19px; padding-top: 19px; }
   .service { padding-bottom: 16px; }
   .service h4 { font-size: 18px; }

@@ -199,18 +199,6 @@
   to { opacity: 1; }
 }
 
-@keyframes clinic-card-reveal {
-  0% {
-    opacity: 0;
-    transform: translate3d(104%, 0, 0) scale(.985);
-  }
-  18% { opacity: 1; }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
 @media (max-width: 750px) {
   /* Single-column grid for both upper and lower sections. */
   .cards { grid-template-columns: minmax(0, 1fr); row-gap: 22px; }
@@ -225,6 +213,7 @@
     padding-inline: 0;
     padding-top: 0;
     animation: none;
+    transition: padding-top .58s cubic-bezier(.22, 1, .36, 1);
   }
 
   /* Tighter gap between the section title and the first pair. */
@@ -262,27 +251,22 @@
     min-height: 100%;
     padding: 17px 19px 48px;
     border-color: #fff8e7d9;
-    background:
-      radial-gradient(circle at 14% -12%, #ffffffeb 0%, transparent 46%),
-      linear-gradient(135deg, #fffdf1ed 0%, #fff8e7df 54%, #eadbc9d9 100%);
+    background: linear-gradient(135deg, #fffdf1 0%, #fff8e7 54%, #eadbc9 100%);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translate3d(104%, 0, 0) scale(.985);
-    transition: none;
-    backface-visibility: hidden;
+    transform: translateX(20px);
+    transition:
+      opacity .52s ease,
+      transform .62s cubic-bezier(.22, 1, .36, 1),
+      visibility 0s linear .62s;
   }
   .cards > .pair[data-revealed="true"] .afterCard {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  .cards > .pair[data-reveal-animating][data-revealed="true"] .afterCard {
-    background:
-      radial-gradient(circle at 14% -12%, #ffffffeb 0%, transparent 46%),
-      linear-gradient(135deg, #fffdf1 0%, #fff8e7 54%, #eadbc9 100%);
-    animation: clinic-card-reveal .9s cubic-bezier(.22, 1, .36, 1) both;
+    transform: translateX(0);
+    transition-delay: 0s;
   }
 
   /* Lift each "before" card just past its own text, keeping the full copy
@@ -292,6 +276,9 @@
   }
   .cards > .pair[data-comparing="true"] .beforeCard {
     transform: translateY(calc(-1 * var(--before-lift, 112px)));
+  }
+  .cards > .pair .beforeCard {
+    transition: transform .58s cubic-bezier(.22, 1, .36, 1);
   }
 
   .cards > .pair .beforeCard .cardHeading,
@@ -335,11 +322,5 @@
   }
   .pair[data-comparing="true"] .beforeCard {
     transform: translateY(calc(-1 * var(--before-lift, 112px)));
-  }
-}
-
-@media (max-width: 750px) and (prefers-reduced-motion: reduce) {
-  .cards > .pair[data-reveal-animating][data-revealed="true"] .afterCard {
-    animation: clinic-card-reveal .9s cubic-bezier(.22, 1, .36, 1) both !important;
   }
 }

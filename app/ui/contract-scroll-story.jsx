@@ -56,12 +56,19 @@ function ContractGroup({ group, index }) {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          observer.unobserve(entry.target);
-          if (lockedRef.current) return;
+          if (!entry.isIntersecting) {
+            if (revealTimerRef.current !== null) {
+              window.clearTimeout(revealTimerRef.current);
+              revealTimerRef.current = null;
+            }
+            return;
+          }
+          if (lockedRef.current || revealTimerRef.current !== null) return;
           revealTimerRef.current = window.setTimeout(() => {
             revealTimerRef.current = null;
-            if (!lockedRef.current) setExpanded(true);
+            if (lockedRef.current) return;
+            observer.unobserve(el);
+            setExpanded(true);
           }, index * MOBILE_REVEAL_STAGGER_MS);
         });
       },
@@ -241,6 +248,7 @@ export function ContractScrollStory({ intro }) {
 
   return (
     <div className={styles.journey} data-contract-scroll-preview>
+      <div className={styles.mobileBackdrop} aria-hidden="true" />
       <div className={styles.content}>
         <div className={styles.intro}>{intro}</div>
         <div className={styles.groups} ref={groupsRef}>

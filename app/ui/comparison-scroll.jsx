@@ -73,6 +73,9 @@ const ScrollPairCard = memo(function ScrollPairCard({
 
 export function ScrollComparisonReveal({ before, after, heading }) {
   const sceneRef = useRef(null);
+  const flowSnapshotRef = useRef(null);
+  const flowFrameRef = useRef(0);
+  const flowTimersRef = useRef(new Map());
   const [revealed, setRevealed] = useState(() => new Set());
   const [activeComparisons, setActiveComparisons] = useState(() => new Set());
   const pairs = useMemo(
@@ -83,6 +86,15 @@ export function ScrollComparisonReveal({ before, after, heading }) {
   const lowerPairs = pairs.slice(4);
 
   const toggleComparison = (index, opening) => {
+    const root = sceneRef.current;
+    if (root && window.matchMedia("(max-width: 750px)").matches) {
+      const positions = new Map();
+      root.querySelectorAll("[data-comparison-pair]").forEach((pair) => {
+        positions.set(Number(pair.dataset.pairIndex), pair.getBoundingClientRect().top);
+      });
+      flowSnapshotRef.current = { index, positions };
+    }
+
     setActiveComparisons((current) => {
       const next = new Set(current);
       if (opening) next.add(index);
@@ -105,11 +117,38 @@ export function ScrollComparisonReveal({ before, after, heading }) {
       measuredWidth = width;
       root.querySelectorAll("[data-comparison-pair]").forEach((pair) => {
         const text = pair.querySelector("[data-before-text]");
+        const afterCard = pair.querySelector("[data-after-card]");
         if (!text) return;
         pair.style.setProperty(
           "--before-lift",
           `${Math.ceil(text.offsetTop + text.offsetHeight + 12)}px`,
         );
+        if (afterCard) {
+          const beforeCard = pair.querySelector("[data-before-card]");
+          const stack = pair.querySelector(`.${styles.stack}`);
+          const beforeStyles = beforeCard ? window.getComputedStyle(beforeCard) : null;
+          const compactHeight = beforeCard && beforeStyles
+            ? Math.ceil(
+                text.offsetTop
+                + text.offsetHeight
+                + Number.parseFloat(beforeStyles.paddingBottom)
+                + Number.parseFloat(beforeStyles.borderBottomWidth),
+              )
+            : 0;
+          const restHeight = Math.max(compactHeight, Math.ceil(afterCard.offsetHeight));
+          const collapse = Math.max(0, restHeight - compactHeight);
+          // Keep a small overlap between the cards while leaving comfortable
+          // space above the "Самостоятельно" label once it slides below.
+          const drop = Math.max(0, Math.ceil(afterCard.offsetHeight - 6));
+          const flowSpace = Math.max(
+            0,
+            Math.ceil(compactHeight + drop - (stack?.offsetHeight ?? 0)),
+          );
+          pair.style.setProperty("--before-rest-height", `${restHeight}px`);
+          pair.style.setProperty("--before-collapse", `${collapse}px`);
+          pair.style.setProperty("--before-drop", `${drop}px`);
+          pair.style.setProperty("--before-flow-space", `${flowSpace}px`);
+        }
       });
     };
     const scheduleMeasure = () => {
@@ -135,6 +174,54 @@ export function ScrollComparisonReveal({ before, after, heading }) {
       window.cancelAnimationFrame(frame);
     };
   }, [before.length]);
+
+  useLayoutEffect(() => {
+    const snapshot = flowSnapshotRef.current;
+    const root = sceneRef.current;
+    if (!snapshot || !root || !window.matchMedia("(max-width: 750px)").matches) return;
+    flowSnapshotRef.current = null;
+
+    const movingPairs = [];
+    root.querySelectorAll("[data-comparison-pair]").forEach((pair) => {
+      const index = Number(pair.dataset.pairIndex);
+      if (index <= snapshot.index) return;
+      const oldTop = snapshot.positions.get(index);
+      if (oldTop == null) return;
+      const offset = oldTop - pair.getBoundingClientRect().top;
+      if (Math.abs(offset) < 0.5) return;
+
+      const oldTimer = flowTimersRef.current.get(pair);
+      if (oldTimer) window.clearTimeout(oldTimer);
+      pair.style.transition = "none";
+      pair.style.transform = `translate3d(0, ${offset}px, 0)`;
+      movingPairs.push(pair);
+    });
+
+    if (!movingPairs.length) return;
+    // Batch all inverse transforms before forcing one layout read. Reading
+    // each pair separately makes mobile browsers recalculate layout repeatedly.
+    root.getBoundingClientRect();
+    if (flowFrameRef.current) window.cancelAnimationFrame(flowFrameRef.current);
+    flowFrameRef.current = window.requestAnimationFrame(() => {
+      flowFrameRef.current = 0;
+      movingPairs.forEach((pair) => {
+        pair.style.removeProperty("transition");
+        pair.style.transform = "translate3d(0, 0, 0)";
+        const timer = window.setTimeout(() => {
+          pair.style.removeProperty("transform");
+          pair.style.removeProperty("transition");
+          flowTimersRef.current.delete(pair);
+        }, 840);
+        flowTimersRef.current.set(pair, timer);
+      });
+    });
+  }, [activeComparisons]);
+
+  useEffect(() => () => {
+    if (flowFrameRef.current) window.cancelAnimationFrame(flowFrameRef.current);
+    flowTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    flowTimersRef.current.clear();
+  }, []);
 
   useEffect(() => {
     const root = sceneRef.current;

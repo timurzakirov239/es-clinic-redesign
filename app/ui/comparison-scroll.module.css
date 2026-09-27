@@ -211,12 +211,13 @@
     grid-column: 1 / -1;
     width: 100%;
     justify-self: stretch;
+    isolation: isolate;
     padding-inline: 0;
     padding-top: 0;
     margin-top: 0;
     animation: none;
     transition:
-      margin-top .58s cubic-bezier(.22, 1, .36, 1);
+      transform .76s cubic-bezier(.4, 0, .2, 1);
   }
 
   /* Tighter gap between the section title and the first pair. */
@@ -239,11 +240,14 @@
   .cards > .pair .beforeCard {
     grid-area: 1 / 1;
     z-index: 0;
-    min-height: 148px;
-    padding: 17px 19px 62px;
+    align-self: start;
+    height: var(--before-rest-height, auto);
+    min-height: 0;
+    padding: 23px 19px 16px;
     background:
-      radial-gradient(circle at 16% -8%, #fffdf0cc 0%, transparent 44%),
-      linear-gradient(145deg, #f2e9dce8, #dfd1bfc7);
+      radial-gradient(circle at 16% -8%, #fffdf0 0%, transparent 44%),
+      linear-gradient(145deg, #f2e9dc, #dfd1bf);
+    clip-path: inset(0 0 0 0 round 22px);
     transition: none;
   }
 
@@ -255,13 +259,14 @@
     padding: 17px 19px 48px;
     border-color: #fff8e7d9;
     background: linear-gradient(135deg, #fffdf1 0%, #fff8e7 54%, #eadbc9 100%);
-    opacity: 1;
+    opacity: 0;
     visibility: hidden;
     pointer-events: none;
     transform: translateX(28px);
     transition:
-      transform .58s cubic-bezier(.22, 1, .36, 1),
-      visibility 0s linear .58s;
+      opacity .76s cubic-bezier(.4, 0, .2, 1),
+      transform .76s cubic-bezier(.4, 0, .2, 1),
+      visibility 0s linear .76s;
   }
   .cards > .pair[data-revealed="true"] .afterCard {
     opacity: 1;
@@ -271,21 +276,23 @@
     transition-delay: 0s;
   }
 
-  /* Lift each "before" card just past its own text, keeping the full copy
-     readable above the overlapping clinic card. */
+  /* Reveal the self-care card below the stationary clinic card. Its reserved
+     bottom space pushes later rows down instead of making the page jump. */
   .cards > .pair[data-comparing="true"] {
-    margin-top: var(--before-lift, 0px);
     pointer-events: none;
+    padding-bottom: var(--before-flow-space, 0px);
   }
   .cards > .pair[data-comparing="true"] .stack {
-    z-index: 2;
     pointer-events: auto;
   }
   .cards > .pair[data-comparing="true"] .beforeCard {
-    transform: translateY(calc(-1 * var(--before-lift, 112px)));
+    clip-path: inset(0 0 var(--before-collapse, 0px) 0 round 22px);
+    transform: translateY(var(--before-drop, 0px));
   }
   .cards > .pair .beforeCard {
-    transition: transform .58s cubic-bezier(.22, 1, .36, 1);
+    transition:
+      clip-path .76s cubic-bezier(.4, 0, .2, 1),
+      transform .76s cubic-bezier(.4, 0, .2, 1);
   }
   .cards > .pair[data-reveal-animating] .beforeCard,
   .cards > .pair[data-reveal-animating] .afterCard {
@@ -306,10 +313,6 @@
     column-gap: 12px;
     align-items: start;
     max-width: 100%;
-    transition: transform .58s cubic-bezier(.22, 1, .36, 1);
-  }
-  .stickyView > :global(.intro-title[data-active-comparison]) {
-    transform: translateY(calc(-1 * var(--active-lift, 0px)));
   }
   .stickyView > :global(.intro-title) > :global(img) {
     float: none;
@@ -338,5 +341,11 @@
   }
   .pair[data-comparing="true"] .beforeCard {
     transform: translateY(calc(-1 * var(--before-lift, 112px)));
+  }
+}
+
+@media (max-width: 750px) and (prefers-reduced-motion: reduce) {
+  .pair[data-comparing="true"] .beforeCard {
+    transform: translateY(var(--before-drop, 0px));
   }
 }

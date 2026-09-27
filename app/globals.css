@@ -2081,7 +2081,7 @@ footer {
 .process-description { padding: 0 70px 24px 22px; }
 .process-description p { margin: 0; font-size: 16px; line-height: 1.65; }
 @media (max-width: 750px) {
-  #process { padding-top: 44px; padding-bottom: 44px; }
+  #process { padding-top: 44px; padding-bottom: 52px; }
   .process-list { margin-top: 32px; }
   .process-list::before { display: none; }
   .process-list > li { padding: 0 0 16px 28px; border-top: 0; }

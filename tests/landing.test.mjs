@@ -122,11 +122,14 @@ test("mobile comparison cards expand independently without scrolling the page", 
     await page.waitForTimeout(650);
     const button = pair.locator("button[aria-label='Показать сравнение']");
     await button.scrollIntoViewIfNeeded();
+    const clinicTopBefore = await pair.locator("[data-after-card]").evaluate(element => element.getBoundingClientRect().top);
     const scrollBefore = await page.evaluate(() => window.scrollY);
     await button.click();
     await page.waitForFunction(element => element?.dataset.comparing === "true", await pair.elementHandle());
     await page.waitForTimeout(650);
     assert.equal(await page.evaluate(() => window.scrollY), scrollBefore, "Opening a card must not force page scrolling");
+    const clinicTopAfter = await pair.locator("[data-after-card]").evaluate(element => element.getBoundingClientRect().top);
+    assert.ok(Math.abs(clinicTopAfter - clinicTopBefore) < 2, "The selected clinic card must stay anchored while opening");
   };
 
   try {
@@ -135,27 +138,32 @@ test("mobile comparison cards expand independently without scrolling the page", 
     const pairs = root.locator("[data-comparison-pair]");
     const first = pairs.nth(0);
     const second = pairs.nth(1);
+    const titleTopBefore = await root.locator(".intro-title").evaluate(element => element.getBoundingClientRect().top + window.scrollY);
 
     await openComparison(first);
+    const firstBeforeTextTop = await first.locator("[data-before-text]").evaluate(element => element.getBoundingClientRect().top);
+    const firstClinicBottom = await first.locator("[data-after-card]").evaluate(element => element.getBoundingClientRect().bottom);
+    assert.ok(firstBeforeTextTop > firstClinicBottom, "The self-care card must emerge below the stationary clinic card");
+    assert.equal(await root.locator(".intro-title").evaluate(element => element.getBoundingClientRect().top + window.scrollY), titleTopBefore, "Opening a comparison must not move the heading");
     await openComparison(second);
     assert.equal(await first.getAttribute("data-comparing"), "true");
     assert.equal(await second.getAttribute("data-comparing"), "true", "A second comparison must not close the first");
     assert.equal(await first.locator("button").getAttribute("aria-expanded"), "true");
     assert.equal(await second.locator("button").getAttribute("aria-expanded"), "true");
 
-    const headingBottom = await root.locator(".intro-title").evaluate(element => element.getBoundingClientRect().bottom);
-    const beforeTop = await first.locator("[data-before-card]").evaluate(element => element.getBoundingClientRect().top);
-    assert.ok(beforeTop >= headingBottom, "The first comparison must leave the title unobstructed");
-
     const collectivePicture = root.locator("[data-after-card] p").filter({ hasText: "Команда собирает целостную картину" }).locator("xpath=../../..");
     assert.equal(await collectivePicture.count(), 1);
-    const previousHeight = await root.evaluate(element => element.getBoundingClientRect().height);
+    const upperTopBefore = await pairs.nth(2).evaluate(element => element.getBoundingClientRect().top + window.scrollY);
+    const lowerTopBefore = await pairs.nth(4).evaluate(element => element.getBoundingClientRect().top + window.scrollY);
     await openComparison(collectivePicture);
     assert.equal(await collectivePicture.getAttribute("data-comparing"), "true");
-    assert.ok(
-      await root.evaluate((element, height) => element.getBoundingClientRect().height > height, previousHeight),
-      "Opening the collective-picture card must expand the comparison section",
-    );
+    const upperTopAfter = await pairs.nth(2).evaluate(element => element.getBoundingClientRect().top + window.scrollY);
+    const lowerTopAfter = await pairs.nth(4).evaluate(element => element.getBoundingClientRect().top + window.scrollY);
+    assert.ok(Math.abs(upperTopAfter - upperTopBefore) < 1, "Opening a lower comparison must not visibly shift cards above it");
+    assert.ok(lowerTopAfter > lowerTopBefore, "The section must reserve space below the opened comparison");
+    const previousContentBottom = await page.locator("#comparison").evaluate(element => Math.max(...[...element.previousElementSibling.children].map(child => child.getBoundingClientRect().bottom)));
+    const titleTop = await root.locator(".intro-title").evaluate(element => element.getBoundingClientRect().top);
+    assert.ok(titleTop >= previousContentBottom, "The title must stay below the preceding section");
   } finally {
     await context.close();
     await browser.close();

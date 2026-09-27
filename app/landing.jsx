@@ -348,11 +348,17 @@ export function ScrollVersionLanding() {
             ))}
           </div>
         </section>
-        <section className="section split" id="history">
-          <div>
-            <div className="intro-title">
-              <Mark />
-              <Text n={88} as="h2" />
+        <section className="section split history-section" id="history">
+          <div className="history-copy">
+            <Photo
+              name="history-walk"
+              alt="Посетительница идёт по холлу ЕС Клиники"
+              className="history-thumbnail"
+            />
+            <div className="history-title">
+              <Editable id="copy-88" as="h2">
+                {copy[88].replace("Клиника ", "Клиника\n")}
+              </Editable>
             </div>
             <div className="stats">
               {[
@@ -370,7 +376,7 @@ export function ScrollVersionLanding() {
               ))}
             </div>
           </div>
-          <Photo name="history" alt="Фасад ЕС Клиники с надписью «Основана в 2006»" />
+          <Photo name="history" alt="Врач и сотрудница ресепшена ЕС Клиники" />
         </section>
         <section className="loyalty">
           <Photo name="loyalty" alt="Семья – несколько поколений вместе" />

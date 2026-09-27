@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { memo, useEffect, useId, useRef, useState } from "react";
 import copy from "../data/copy.json";
 import styles from "./contract-scroll-story.module.css";
 
@@ -26,6 +26,8 @@ function Service({ ids }) {
     </article>
   );
 }
+
+const MemoizedMobileService = memo(Service);
 
 function groupTitle(group, index) {
   return `${index + 1}. ${copy[group.title].replace(/^\d+\.\s*/, "").replace(/\s*\n\s*/g, " ")}`;
@@ -129,7 +131,7 @@ function ContractGroup({ group, index }) {
       <div className={styles.panelDetails} id={contentId} aria-hidden={!expanded} inert={!expanded}>
         <div className={styles.panelDetailsInner}>
           <div className={styles.services}>
-            {group.items.map((ids) => <Service ids={ids} key={ids[0]} />)}
+            {group.items.map((ids) => <MemoizedMobileService ids={ids} key={ids[0]} />)}
           </div>
         </div>
       </div>
@@ -147,14 +149,39 @@ function DesktopContractPanel({ group, index }) {
   const [locked, setLocked] = useState(false);
   const contentId = useId();
   const title = groupTitle(group, index);
+  const panelRef = useRef(null);
+  const pointerRef = useRef({ x: 0, y: 0, known: false });
 
-  const handleMouseEnter = (event) => {
-    if (event.target.closest("[data-contract-title]")) return;
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || window.matchMedia("(max-width: 750px)").matches) return;
+
+    const onPointerMove = (event) => {
+      pointerRef.current = { x: event.clientX, y: event.clientY, known: true };
+    };
+
+    const onScroll = () => {
+      if (locked || !pointerRef.current.known) return;
+      const { x, y } = pointerRef.current;
+      const bounds = panel.getBoundingClientRect();
+      if (x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom) {
+        setExpanded(true);
+      }
+    };
+
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [locked]);
+
+  const handleMouseEnter = () => {
     if (!locked) setExpanded(true);
   };
 
-  const handleFocus = (event) => {
-    if (event.target.closest("[data-contract-title]")) return;
+  const handleFocus = () => {
     if (!locked) setExpanded(true);
   };
 
@@ -170,6 +197,7 @@ function DesktopContractPanel({ group, index }) {
 
   return (
     <article
+      ref={panelRef}
       className={`${styles.panel} ${styles.staticPanel}`}
       data-visible="false"
       data-expanded={expanded}

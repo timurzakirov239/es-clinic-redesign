@@ -169,6 +169,7 @@
     margin-bottom: -100vh;
     margin-bottom: -100lvh;
     pointer-events: none;
+    will-change: transform;
     background-image:
       linear-gradient(90deg, #34333159, #47444126 72%),
       linear-gradient(180deg, #47444145, #34323038),

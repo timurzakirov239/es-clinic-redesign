@@ -217,7 +217,8 @@
     margin-top: 0;
     animation: none;
     transition:
-      transform .76s cubic-bezier(.4, 0, .2, 1);
+      transform .76s cubic-bezier(.4, 0, .2, 1),
+      padding-bottom .76s cubic-bezier(.4, 0, .2, 1);
   }
 
   /* Tighter gap between the section title and the first pair. */
@@ -345,6 +346,7 @@
 }
 
 @media (max-width: 750px) and (prefers-reduced-motion: reduce) {
+  .cards > .pair { transition: none; }
   .pair[data-comparing="true"] .beforeCard {
     transform: translateY(var(--before-drop, 0px));
   }

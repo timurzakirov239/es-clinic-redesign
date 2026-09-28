@@ -1,5 +1,5 @@
 "use client";
-import { useId, useRef, useState, useEffect } from "react";
+import { Children, cloneElement, useId, useRef, useState, useEffect, useLayoutEffect } from "react";
 import Image from "next/image";
 import { Editable } from "./editor";
 
@@ -67,6 +67,191 @@ export function ReviewDetails({ children }) {
           <div className="review-details-copy">{children}</div>
         </div>
       </div>
+    </div>
+  );
+}
+
+export function ReviewsCarousel({ children }) {
+  const railRef = useRef(null);
+  const dragRef = useRef(null);
+  const didDragRef = useRef(false);
+  const suppressClickRef = useRef(false);
+  const cycleWidthRef = useRef(0);
+  const animationFrameRef = useRef(0);
+  const [stopped, setStopped] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const cards = Children.toArray(children);
+
+  useEffect(() => {
+    const desktopQuery = window.matchMedia("(min-width: 751px)");
+    const updateDesktopMode = () => setIsDesktop(desktopQuery.matches);
+    updateDesktopMode();
+    desktopQuery.addEventListener("change", updateDesktopMode);
+    return () => desktopQuery.removeEventListener("change", updateDesktopMode);
+  }, []);
+
+  const measureCycle = () => {
+    const rail = railRef.current;
+    if (!rail || cards.length < 2) return 0;
+    const card = rail.querySelector(".review-card");
+    const gap = Number.parseFloat(getComputedStyle(rail).columnGap) || 0;
+    const cardWidth = card?.getBoundingClientRect().width || rail.clientWidth;
+    // Include the flex gap after the last card: it separates one loop from the next.
+    return cardWidth * cards.length + gap * cards.length;
+  };
+
+  const normalizePosition = (rail) => {
+    const cycleWidth = cycleWidthRef.current;
+    if (!cycleWidth) return;
+    const offset = rail.scrollLeft - cycleWidth;
+    if (offset < 0 || offset >= cycleWidth) {
+      rail.scrollLeft = cycleWidth + ((offset % cycleWidth) + cycleWidth) % cycleWidth;
+    }
+  };
+
+  useLayoutEffect(() => {
+    const rail = railRef.current;
+    if (!rail || !isDesktop || cards.length < 2) return undefined;
+
+    const updateCycle = () => {
+      const nextCycleWidth = measureCycle();
+      if (!nextCycleWidth) return;
+      const previousWidth = cycleWidthRef.current;
+      cycleWidthRef.current = nextCycleWidth;
+      rail.scrollLeft = previousWidth
+        ? nextCycleWidth + ((rail.scrollLeft - previousWidth) / previousWidth) * nextCycleWidth
+        : nextCycleWidth;
+      normalizePosition(rail);
+    };
+
+    updateCycle();
+    const observer = new ResizeObserver(updateCycle);
+    observer.observe(rail);
+    return () => observer.disconnect();
+  }, [cards.length, isDesktop]);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail || !isDesktop) {
+      setIsInView(false);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsInView(entry.isIntersecting);
+    }, { threshold: 0.1 });
+    observer.observe(rail);
+    return () => observer.disconnect();
+  }, [isDesktop]);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail || !isDesktop || !isInView || stopped || cards.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+
+    let lastFrame = 0;
+    const startTimer = window.setTimeout(() => {
+      const animate = (time) => {
+        if (!railRef.current) return;
+        if (lastFrame) {
+          railRef.current.scrollLeft += Math.max(time - lastFrame, 0) * 0.045;
+          normalizePosition(railRef.current);
+        }
+        lastFrame = time;
+        animationFrameRef.current = window.requestAnimationFrame(animate);
+      };
+      animationFrameRef.current = window.requestAnimationFrame(animate);
+    }, 500);
+
+    const resetFrameTime = () => {
+      lastFrame = 0;
+    };
+    document.addEventListener("visibilitychange", resetFrameTime);
+
+    return () => {
+      window.clearTimeout(startTimer);
+      window.cancelAnimationFrame(animationFrameRef.current);
+      document.removeEventListener("visibilitychange", resetFrameTime);
+    };
+  }, [cards.length, isDesktop, isInView, stopped]);
+
+  const finishPointer = (event) => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    if (dragRef.current) {
+      suppressClickRef.current = didDragRef.current;
+      if (rail.hasPointerCapture(event.pointerId)) rail.releasePointerCapture(event.pointerId);
+      dragRef.current = null;
+      didDragRef.current = false;
+    }
+  };
+
+  return (
+    <div
+      className="reviews-carousel"
+      ref={railRef}
+      role="region"
+      tabIndex={0}
+      aria-label="Отзывы пациентов"
+      aria-roledescription="карусель"
+      onWheel={(event) => {
+        if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) setStopped(true);
+      }}
+      onKeyUp={() => setStopped(true)}
+      onClick={() => setStopped(true)}
+      onPointerDown={(event) => {
+        didDragRef.current = false;
+        suppressClickRef.current = false;
+        if (event.target.closest("button, a, input, textarea, select, [contenteditable='true']")) return;
+        if (event.pointerType === "mouse") {
+          if (event.button !== 0) return;
+          setStopped(true);
+          dragRef.current = { x: event.clientX, y: event.clientY, scrollLeft: event.currentTarget.scrollLeft, pointerType: "mouse" };
+          event.currentTarget.setPointerCapture(event.pointerId);
+          return;
+        }
+        if (event.pointerType === "touch" || event.pointerType === "pen") {
+          dragRef.current = { x: event.clientX, y: event.clientY, scrollLeft: event.currentTarget.scrollLeft, pointerType: event.pointerType };
+        }
+      }}
+      onPointerMove={(event) => {
+        if (!dragRef.current) return;
+        const distance = event.clientX - dragRef.current.x;
+        const verticalDistance = event.clientY - dragRef.current.y;
+        if (!didDragRef.current && Math.max(Math.abs(distance), Math.abs(verticalDistance)) > 8) {
+          if (dragRef.current.pointerType !== "mouse" && Math.abs(verticalDistance) >= Math.abs(distance)) {
+            dragRef.current = null;
+            return;
+          }
+          didDragRef.current = true;
+          setStopped(true);
+        }
+        if (didDragRef.current) event.currentTarget.scrollLeft = dragRef.current.scrollLeft - distance;
+      }}
+      onPointerUp={finishPointer}
+      onPointerCancel={finishPointer}
+      onClickCapture={(event) => {
+        if (!suppressClickRef.current) return;
+        suppressClickRef.current = false;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+      onScroll={(event) => normalizePosition(event.currentTarget)}
+    >
+      {isDesktop && cards.map((card, index) => cloneElement(card, {
+        key: `review-loop-before-${index}`,
+        className: `${card.props.className || ""} review-card-loop-clone`.trim(),
+        "aria-hidden": true,
+        inert: true,
+      }))}
+      {cards}
+      {isDesktop && cards.map((card, index) => cloneElement(card, {
+        key: `review-loop-after-${index}`,
+        className: `${card.props.className || ""} review-card-loop-clone`.trim(),
+        "aria-hidden": true,
+        inert: true,
+      }))}
     </div>
   );
 }

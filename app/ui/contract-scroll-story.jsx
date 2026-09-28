@@ -10,8 +10,7 @@ const groups = [
   { title: 80, items: [[81, 82, 83], [84, 85]] },
 ];
 
-const REVEAL_STAGGER_MS = 130;
-const MOBILE_REVEAL_STAGGER_MS = 520;
+const REVEAL_STAGGER_MS = 180;
 const REVEAL_THRESHOLD = 0.2;
 const REVEAL_ROOT_MARGIN = "0px 0px -10% 0px";
 
@@ -41,7 +40,6 @@ function ContractGroup({ group, index }) {
   const title = groupTitle(group, index);
   const ref = useRef(null);
   const lockedRef = useRef(false);
-  const revealTimerRef = useRef(null);
 
   useEffect(() => {
     const el = ref.current;
@@ -59,10 +57,7 @@ function ContractGroup({ group, index }) {
           if (!entry.isIntersecting) return;
           observer.unobserve(entry.target);
           if (lockedRef.current) return;
-          revealTimerRef.current = window.setTimeout(() => {
-            revealTimerRef.current = null;
-            if (!lockedRef.current) setExpanded(true);
-          }, index * MOBILE_REVEAL_STAGGER_MS);
+          setExpanded(true);
         });
       },
       { threshold: REVEAL_THRESHOLD, rootMargin: REVEAL_ROOT_MARGIN }
@@ -72,10 +67,6 @@ function ContractGroup({ group, index }) {
     const onMotionChange = () => {
       if (motion.matches) {
         observer.disconnect();
-        if (revealTimerRef.current !== null) {
-          window.clearTimeout(revealTimerRef.current);
-          revealTimerRef.current = null;
-        }
         setExpanded(true);
       }
     };
@@ -83,17 +74,12 @@ function ContractGroup({ group, index }) {
 
     return () => {
       observer.disconnect();
-      if (revealTimerRef.current !== null) window.clearTimeout(revealTimerRef.current);
       motion.removeEventListener("change", onMotionChange);
     };
-  }, [index]);
+  }, []);
 
   const handleToggle = (event) => {
     event.stopPropagation();
-    if (revealTimerRef.current !== null) {
-      window.clearTimeout(revealTimerRef.current);
-      revealTimerRef.current = null;
-    }
     if (expanded) {
       setExpanded(false);
       lockedRef.current = true;
@@ -109,14 +95,18 @@ function ContractGroup({ group, index }) {
       data-contract-panel={index + 1}
       data-expanded={expanded}
     >
+      <div className={`${styles.panelHeading} ${styles.staticHeading}`}>
+        <h3>{title}</h3>
+        <button type="button" className={styles.headingHitArea} aria-label={`${expanded ? "Свернуть" : "Развернуть"}: ${title}`} aria-expanded={expanded} aria-controls={contentId} onClick={handleToggle} />
+      </div>
       <button
         type="button"
-        className={`${styles.panelHeading} ${styles.staticHeading}`}
+        className={styles.panelClose}
+        aria-label={expanded ? "Свернуть" : "Развернуть"}
         aria-expanded={expanded}
         aria-controls={contentId}
         onClick={handleToggle}
       >
-        <span className={styles.panelTitle} data-contract-title role="heading" aria-level={3}>{title}</span>
         <span className={styles.panelExpand} aria-hidden="true">+</span>
       </button>
       <div className={styles.panelDetails} id={contentId} aria-hidden={!expanded} inert={!expanded}>
@@ -141,13 +131,11 @@ function DesktopContractPanel({ group, index }) {
   const contentId = useId();
   const title = groupTitle(group, index);
 
-  const handleMouseEnter = (event) => {
-    if (event.target.closest("[data-contract-title]")) return;
+  const handleMouseEnter = () => {
     if (!locked) setExpanded(true);
   };
 
-  const handleFocus = (event) => {
-    if (event.target.closest("[data-contract-title]")) return;
+  const handleFocus = () => {
     if (!locked) setExpanded(true);
   };
 
@@ -170,14 +158,18 @@ function DesktopContractPanel({ group, index }) {
       onMouseEnter={handleMouseEnter}
       onFocus={handleFocus}
     >
+      <div className={`${styles.panelHeading} ${styles.staticHeading}`}>
+        <h3>{title}</h3>
+        <button type="button" className={styles.headingHitArea} aria-label={`${expanded ? "Свернуть" : "Развернуть"}: ${title}`} aria-expanded={expanded} aria-controls={contentId} onClick={handleToggle} />
+      </div>
       <button
         type="button"
-        className={`${styles.panelHeading} ${styles.staticHeading}`}
+        className={styles.panelClose}
+        aria-label={expanded ? "Свернуть" : "Развернуть"}
         aria-expanded={expanded}
         aria-controls={contentId}
         onClick={handleToggle}
       >
-        <span className={styles.panelTitle} data-contract-title role="heading" aria-level={3}>{title}</span>
         <span className={styles.panelExpand} aria-hidden="true">+</span>
       </button>
       <div className={styles.panelDetails} id={contentId} aria-hidden={!expanded} inert={!expanded}>
@@ -241,7 +233,6 @@ export function ContractScrollStory({ intro }) {
 
   return (
     <div className={styles.journey} data-contract-scroll-preview>
-      <div className={styles.mobileBackdrop} aria-hidden="true" />
       <div className={styles.content}>
         <div className={styles.intro}>{intro}</div>
         <div className={styles.groups} ref={groupsRef}>

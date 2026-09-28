@@ -236,7 +236,9 @@ export function ScrollVersionLanding() {
               <Text n={13} as="h2" />
             </div>
             <Text n={14} className="lead" />
-            <Text n={15} className="system-lower-copy" />
+            <div className="system-bottom">
+              <Text n={15} className="system-lower-copy" />
+            </div>
           </div>
           <Photo name="family" alt="Бабушка целует внука" />
         </section>

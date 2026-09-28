@@ -14,7 +14,11 @@ export function ScrollEffects() {
     let processFrame = 0;
     const pendingProcessRows = new Set();
     const elements = [...document.querySelectorAll("main .section [data-edit-kind='text'], main .section [data-edit-kind='photo'], main .section details:not(.process-step), main .process-list > li, main .loyalty [data-edit-kind], .partner-grid > div")]
-      .filter(el => !el.closest("#comparison, .review-details-content") && !el.parentElement.closest("[data-edit-kind], details"));
+      .filter(el =>
+        !el.closest("#comparison, .review-details-content") &&
+        !el.matches(".system [data-edit-kind='photo']") &&
+        !el.parentElement.closest("[data-edit-kind], details"),
+      );
     const observer = new IntersectionObserver(entries => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;

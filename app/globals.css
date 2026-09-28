@@ -700,7 +700,7 @@ main {
   aspect-ratio: 608 / 649;
   justify-self: end;
   right: -8px;
-  top: -9px;
+  top: auto;
 }
 .system .photo img,
 .system .photo:hover img {
@@ -728,13 +728,21 @@ main {
   position: relative;
   z-index: 1;
 }
+.system-bottom {
+  margin-top: 24px;
+}
+.system-bottom > .system-lower-copy {
+  margin: 0;
+}
 @media (min-width: 1301px) {
   .system {
-    padding: 72px 64px;
+    --system-photo-gap: clamp(80px, 7vw, 128px);
+    --system-photo-size: min(calc(50vw - 112px), 848px);
+    min-height: calc(var(--system-photo-size) + var(--system-photo-gap) + var(--system-photo-gap));
+    padding: var(--system-photo-gap) 64px;
     gap: 64px;
   }
   .system .photo {
-    --system-photo-size: min(calc(50vw - 112px), 848px);
     position: absolute;
     top: 50%;
     right: max(56px, calc(50vw - 904px));
@@ -764,44 +772,65 @@ main {
   }
   .system-copy > .lead {
     max-width: 26em;
-    margin: clamp(80px, 8vw, 160px) 0 clamp(56px, 5.5vw, 88px);
+    margin: clamp(112px, 10vw, 184px) 0 clamp(56px, 5.5vw, 88px);
     font-size: 26px;
     line-height: 30px;
     letter-spacing: -0.02em;
   }
-  .system-copy > .system-lower-copy {
+  .system-copy > .system-bottom {
+    position: relative;
     align-self: stretch;
-    margin: 0;
+    margin-top: auto;
     padding: 0 0 22px;
+  }
+  .system-bottom::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    top: -44px;
+    right: -100vw;
+    bottom: -72px;
+    left: -100vw;
+    background: var(--cream);
+    pointer-events: none;
+  }
+  .system-bottom > .system-lower-copy {
+    position: relative;
+    z-index: 1;
+    margin: 0;
     color: var(--brown);
   }
 }
 @media (min-width: 981px) and (max-width: 1300px) {
   .system {
     grid-template-columns: minmax(0, 1fr);
-    gap: 32px;
-    padding: 72px 48px;
+    gap: clamp(56px, 6vw, 80px);
+    padding: clamp(80px, 8vw, 112px) 48px;
   }
   .system > div.photo {
     width: min(100%, 760px);
     max-width: 760px;
     aspect-ratio: 1;
     justify-self: center;
+    margin: 0 auto;
     right: auto;
-    top: 32px;
+    top: auto;
   }
 }
 @media (max-width: 980px) {
   .system {
     grid-template-columns: minmax(0, 1fr);
+    gap: clamp(56px, 8vw, 88px);
+    padding-block: clamp(72px, 9vw, 104px);
   }
   .system > div.photo {
     width: 100%;
     max-width: 739px;
     aspect-ratio: 1;
     justify-self: center;
+    margin: 0 auto;
     right: auto;
-    top: 20px;
+    top: auto;
   }
 }
 @media (min-width: 761px) {
@@ -826,11 +855,12 @@ main {
 }
 .system-clover-glass {
   z-index: 2;
-  top: -150px;
-  right: clamp(-100px, -5vw, -65px);
+  top: -240px;
+  right: -3%;
   left: auto;
-  width: clamp(300px, 24vw, 455px);
+  width: 455px;
   aspect-ratio: 1;
+  transform: translate(40px, -20px);
 }
 .system-clover-glass::before {
   content: "";
@@ -860,11 +890,31 @@ main {
 }
 .system-clover-soft {
   z-index: 0;
-  top: 26%;
+  top: 8%;
   left: 14%;
-  width: clamp(280px, 23vw, 440px);
+  width: 440px;
   height: auto;
   fill: #fef5e40d;
+}
+@media (min-width: 1301px) {
+  .system-clover-glass {
+    top: -240px;
+    right: -3%;
+    width: 455px;
+  }
+}
+@media (max-width: 980px) {
+  .system-clover-glass {
+    width: clamp(300px, 24vw, 455px);
+  }
+}
+@media (max-width: 768px) {
+  .system-clover-glass {
+    right: -120px;
+  }
+  .system-clover-soft {
+    display: none;
+  }
 }
 .section.consultation-lead {
   display: grid;
@@ -874,7 +924,7 @@ main {
   height: auto;
   padding: 0;
   border: 0;
-  background: var(--cream);
+  background: #f6e9d4;
   color: #765e4b;
 }
 .consultation-lead-photo.photo {
@@ -897,7 +947,7 @@ main {
   align-items: center;
   justify-content: center;
   padding: 30px clamp(24px, 4vw, 64px);
-  background: var(--cream);
+  background: #f6e9d4;
   text-align: center;
 }
 .consultation-lead-inner {
@@ -1912,23 +1962,6 @@ footer {
   .system {
     overflow: hidden;
     background: #a59688;
-  }
-  .system > div.photo {
-    top: auto;
-  }
-  .system-clover-glass {
-    top: -88px;
-    right: -80px;
-    left: auto;
-    width: 220px;
-  }
-  .system-clover-soft {
-    top: auto;
-    left: auto;
-    right: -92px;
-    bottom: 50px;
-    width: 260px;
-    transform: none;
   }
   .responsibility .statement {
     font-size: 29px;

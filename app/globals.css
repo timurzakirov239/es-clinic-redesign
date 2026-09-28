@@ -99,7 +99,7 @@ main {
 .section {
   max-width: none;
   margin: auto;
-  padding: 80px max(var(--pad), calc((100% - 1600px) / 2));
+  padding: var(--section-pad-block, 80px) max(var(--pad), calc((100% - 1600px) / 2));
   border-bottom: 1px solid var(--line);
 }
 #contract.section {
@@ -1301,16 +1301,36 @@ details[open] > summary > .plus {
 @media (min-width: 751px) {
   .testimonial { --testimonial-edge: max(var(--pad), calc((100% - 1600px) / 2)); }
   .reviews-carousel {
+    align-items: flex-start;
     width: calc(100% + var(--testimonial-edge) + var(--testimonial-edge));
     margin-left: calc(0px - var(--testimonial-edge));
   }
+  .testimonial .review-details { display: flex; flex: 1; flex-direction: column; margin-top: 0; padding-top: 0; }
+  .testimonial .review-details-content { flex: 0 0 auto; }
+  .testimonial .review-toggle {
+    position: relative;
+    flex: 1;
+    min-height: 84px;
+    padding-top: 45px;
+    border-top: 0;
+  }
+  .testimonial .review-toggle::before {
+    position: absolute;
+    top: 26px;
+    right: 0;
+    left: 0;
+    border-top: 1px solid var(--line);
+    content: "";
+    pointer-events: none;
+  }
+  .testimonial .review-card { height: auto; }
 }
 .review-card {
   display: flex;
   flex-direction: column;
   flex: 0 0 calc((100% - clamp(20px, 2.2vw, 36px)) / 2);
   min-width: 0;
-  min-height: 470px;
+  min-height: 420px;
   height: 100%;
   scroll-snap-align: none;
   padding: clamp(26px, 2.4vw, 40px);
@@ -1392,6 +1412,9 @@ details[open] > summary > .plus {
   .review-card-loop-clone { display: none; }
   .review-card { width: 100%; flex-basis: auto; min-height: 0; padding: 25px 21px; border-radius: 28px; }
   .review-author { min-height: 0; }
+  .review-details { display: flex; flex-direction: column; }
+  .review-details-content { order: 0; }
+  .review-toggle { order: 1; }
 }
 blockquote {
   margin: 0;
@@ -1986,6 +2009,38 @@ footer {
   }
   .system > .system-copy {
     order: 0;
+    width: 100%;
+    min-width: 0;
+  }
+  .system .intro-title {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: start;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    translate: none !important;
+    scale: 1 !important;
+  }
+  .system .intro-title > img {
+    float: none;
+    width: 24px;
+    height: 24px;
+    margin: 6px 0 0;
+  }
+  .system .intro-title > h2 {
+    grid-column: 2;
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 0 28px;
+    overflow-wrap: anywhere;
+    translate: none !important;
+    scale: 1 !important;
   }
   .system {
     overflow: hidden;
@@ -2070,8 +2125,8 @@ footer {
     min-height: 340px;
   }
   .prefooter-photo {
-    position: relative;
-    top: auto;
+    position: sticky;
+    top: 0;
     height: clamp(260px, 80vw, 380px);
     min-height: 260px;
   }
@@ -2372,6 +2427,73 @@ footer {
   .header-mobile-contact { display: block; }
 }
 
+/* Keep the desktop composition proportional as the viewport grows. */
+@media (min-width: 1301px) {
+  :root {
+    --section-pad-block: clamp(80px, 5vw, 96px);
+  }
+
+  body { font-size: clamp(18px, 1.05vw, 20px); }
+  h2 { font-size: clamp(38px, 2.7vw, 52px); }
+  h3 { font-size: clamp(26px, 1.6vw, 32px); }
+  .lead { font-size: clamp(19px, 1.25vw, 24px); }
+
+  .family-showcase.photo {
+    height: clamp(760px, 50vw, 960px);
+  }
+
+  .system .intro-title {
+    font-size: clamp(38px, 2.6vw, 50px);
+  }
+  .system > div.photo { max-width: none; }
+
+  .section.consultation-lead {
+    height: clamp(760px, 100svh, 1040px);
+    min-height: clamp(760px, 100svh, 1040px);
+  }
+  .consultation-lead-form {
+    padding: clamp(40px, 4vw, 76px);
+  }
+  .consultation-lead-inner {
+    max-width: clamp(520px, 35vw, 640px);
+  }
+  .consultation-lead-title {
+    font-size: clamp(20px, 1.15vw, 23px);
+    margin-bottom: clamp(30px, 2.5vw, 48px);
+  }
+  .consultation-lead-form form { max-width: clamp(560px, 34vw, 640px); }
+  .consultation-lead-field {
+    height: clamp(56px, 3.2vw, 64px);
+    font-size: clamp(15px, 1vw, 18px);
+  }
+  .consultation-lead-agree { font-size: clamp(12px, .8vw, 15px); }
+  .consultation-lead-submit {
+    height: clamp(54px, 3.3vw, 64px);
+    font-size: clamp(15px, .95vw, 18px);
+  }
+  .consultation-lead-or { font-size: clamp(14px, .85vw, 16px); }
+  .consultation-lead-messengers { gap: clamp(16px, 1.5vw, 24px); }
+  .consultation-lead-messengers a {
+    width: clamp(46px, 3vw, 58px);
+    height: clamp(46px, 3vw, 58px);
+  }
+
+  .contract summary,
+  .faq summary { font-size: clamp(25px, 1.7vw, 32px); }
+  .services p { font-size: clamp(17px, 1vw, 19px); }
+  .doctors { gap: clamp(30px, 2vw, 38px); }
+  .doctor-caption { font-size: clamp(18px, 1vw, 20px); }
+  .doctor-caption:first-line { font-size: clamp(23px, 1.35vw, 27px); }
+
+  footer {
+    padding-right: max(var(--pad), calc((100% - 1600px) / 2));
+    padding-left: max(var(--pad), calc((100% - 1600px) / 2));
+  }
+  .footer-columns { gap: clamp(40px, 3vw, 64px); }
+  .footer-columns a,
+  .footer-columns p { font-size: clamp(16px, .9vw, 18px); }
+}
+
 /* Local visual refinement. Published baseline remains unchanged. */
 #history.history-section {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -2445,4 +2567,9 @@ footer {
     animation: none !important;
     transition: none !important;
   }
+}
+
+@media (min-width: 1301px) {
+  #history .history-title h2 { font-size: clamp(38px, 2.7vw, 52px); }
+  #system .system-copy > .lead { font-size: clamp(21px, 1.25vw, 24px); }
 }

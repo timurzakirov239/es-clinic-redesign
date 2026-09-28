@@ -1,5 +1,5 @@
 "use client";
-import { Children, cloneElement, useId, useRef, useState, useEffect, useLayoutEffect } from "react";
+import { Children, cloneElement, createContext, useContext, useId, useRef, useState, useEffect, useLayoutEffect } from "react";
 import Image from "next/image";
 import { Editable } from "./editor";
 
@@ -47,26 +47,34 @@ export function ProcessStep({ heading, children, variant = "process" }) {
   );
 }
 
-export function ReviewDetails({ children }) {
-  const [open, setOpen] = useState(false);
+const ReviewDisclosureContext = createContext(null);
+
+export function ReviewDetails({ reviewId, intro, children }) {
+  const disclosure = useContext(ReviewDisclosureContext);
+  const [localOpen, setLocalOpen] = useState(false);
+  const open = disclosure && reviewId ? disclosure.openReviews.has(reviewId) : localOpen;
   const contentId = useId();
+  const toggle = () => {
+    if (disclosure && reviewId) disclosure.toggleReview(reviewId);
+    else setLocalOpen((value) => !value);
+  };
 
   return (
     <div className="review-details" data-expanded={open}>
+      <div className="review-details-content" id={contentId} aria-hidden={!open} inert={!open}>
+        <div className="review-details-content-inner">
+          <div className="review-details-copy">{intro}{children}</div>
+        </div>
+      </div>
       <button className="review-toggle" type="button" aria-expanded={open} aria-controls={contentId}
         aria-label={open ? "Свернуть отзыв" : "Читать отзыв полностью"}
-        onClick={() => setOpen(!open)}>
+        onClick={toggle}>
         <span className="review-toggle-label" aria-hidden="true">
           <span className="review-read">Читать отзыв полностью</span>
           <span className="review-close">Свернуть отзыв</span>
         </span>
         <span className="review-expand" aria-hidden="true">+</span>
       </button>
-      <div className="review-details-content" id={contentId} aria-hidden={!open} inert={!open}>
-        <div className="review-details-content-inner">
-          <div className="review-details-copy">{children}</div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -81,7 +89,16 @@ export function ReviewsCarousel({ children }) {
   const [stopped, setStopped] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [openReviews, setOpenReviews] = useState(() => new Set());
   const cards = Children.toArray(children);
+  const toggleReview = (reviewId) => {
+    setOpenReviews((previous) => {
+      const next = new Set(previous);
+      if (next.has(reviewId)) next.delete(reviewId);
+      else next.add(reviewId);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const desktopQuery = window.matchMedia("(min-width: 751px)");
@@ -129,6 +146,13 @@ export function ReviewsCarousel({ children }) {
     const observer = new ResizeObserver(updateCycle);
     observer.observe(rail);
     return () => observer.disconnect();
+  }, [cards.length, isDesktop]);
+
+  useLayoutEffect(() => {
+    const rail = railRef.current;
+    if (!rail || !isDesktop) return;
+    rail.querySelectorAll(".review-card-loop-clone button, .review-card-loop-clone a, .review-card-loop-clone input, .review-card-loop-clone select, .review-card-loop-clone textarea, .review-card-loop-clone [contenteditable='true']")
+      .forEach((control) => { control.tabIndex = -1; });
   }, [cards.length, isDesktop]);
 
   useEffect(() => {
@@ -188,6 +212,7 @@ export function ReviewsCarousel({ children }) {
   };
 
   return (
+    <ReviewDisclosureContext.Provider value={{ openReviews, toggleReview }}>
     <div
       className="reviews-carousel"
       ref={railRef}
@@ -243,16 +268,15 @@ export function ReviewsCarousel({ children }) {
         key: `review-loop-before-${index}`,
         className: `${card.props.className || ""} review-card-loop-clone`.trim(),
         "aria-hidden": true,
-        inert: true,
       }))}
       {cards}
       {isDesktop && cards.map((card, index) => cloneElement(card, {
         key: `review-loop-after-${index}`,
         className: `${card.props.className || ""} review-card-loop-clone`.trim(),
         "aria-hidden": true,
-        inert: true,
       }))}
     </div>
+    </ReviewDisclosureContext.Provider>
   );
 }
 

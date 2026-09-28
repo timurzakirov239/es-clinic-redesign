@@ -76,6 +76,7 @@ export function ScrollComparisonReveal({ before, after, heading }) {
   const flowSnapshotRef = useRef(null);
   const flowFrameRef = useRef(0);
   const flowTimersRef = useRef(new Map());
+  const nextSectionAnimationRef = useRef(null);
   const [revealed, setRevealed] = useState(() => new Set());
   const [activeComparisons, setActiveComparisons] = useState(() => new Set());
   const pairs = useMemo(
@@ -92,7 +93,13 @@ export function ScrollComparisonReveal({ before, after, heading }) {
       root.querySelectorAll("[data-comparison-pair]").forEach((pair) => {
         positions.set(Number(pair.dataset.pairIndex), pair.getBoundingClientRect().top);
       });
-      flowSnapshotRef.current = { index, positions };
+      const nextSection = root.closest("section")?.nextElementSibling;
+      flowSnapshotRef.current = {
+        index,
+        positions,
+        nextSection,
+        nextSectionTop: nextSection?.getBoundingClientRect().top ?? null,
+      };
     }
 
     setActiveComparisons((current) => {
@@ -197,6 +204,33 @@ export function ScrollComparisonReveal({ before, after, heading }) {
       movingPairs.push(pair);
     });
 
+    const { nextSection, nextSectionTop } = snapshot;
+    if (nextSection?.isConnected && Number.isFinite(nextSectionTop)) {
+      nextSectionAnimationRef.current?.cancel();
+      nextSectionAnimationRef.current = null;
+      const offset = nextSectionTop - nextSection.getBoundingClientRect().top;
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!reduceMotion && Math.abs(offset) >= 0.5 && typeof nextSection.animate === "function") {
+        const animation = nextSection.animate(
+          [
+            { transform: `translate3d(0, ${offset}px, 0)` },
+            { transform: "translate3d(0, 0, 0)" },
+          ],
+          {
+            duration: 760,
+            easing: "cubic-bezier(.4, 0, .2, 1)",
+          },
+        );
+        nextSectionAnimationRef.current = animation;
+        animation.onfinish = () => {
+          if (nextSectionAnimationRef.current === animation) {
+            nextSectionAnimationRef.current = null;
+          }
+        };
+        animation.oncancel = animation.onfinish;
+      }
+    }
+
     if (!movingPairs.length) return;
     // Batch all inverse transforms before forcing one layout read. Reading
     // each pair separately makes mobile browsers recalculate layout repeatedly.
@@ -221,6 +255,7 @@ export function ScrollComparisonReveal({ before, after, heading }) {
     if (flowFrameRef.current) window.cancelAnimationFrame(flowFrameRef.current);
     flowTimersRef.current.forEach((timer) => window.clearTimeout(timer));
     flowTimersRef.current.clear();
+    nextSectionAnimationRef.current?.cancel();
   }, []);
 
   useEffect(() => {

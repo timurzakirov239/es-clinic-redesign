@@ -702,11 +702,15 @@ main {
   right: -8px;
   top: auto;
 }
-.system .photo img,
-.system .photo:hover img {
+.system .photo img {
   object-fit: contain;
   transform: none;
-  transition: none;
+  transition: transform 0.5s;
+}
+@media (min-width: 751px) and (hover: hover) {
+  .system .photo:hover img {
+    transform: scale(1.015);
+  }
 }
 .system {
   position: relative;
@@ -940,6 +944,11 @@ main {
 .consultation-lead-photo.photo img {
   object-fit: cover;
   object-position: center;
+  transform: none;
+  transition: none;
+}
+.consultation-lead-photo.photo:hover img {
+  transform: none;
 }
 .consultation-lead-form {
   min-height: 0;
@@ -1410,11 +1419,37 @@ details[open] > summary > .plus {
     touch-action: auto;
   }
   .review-card-loop-clone { display: none; }
-  .review-card { width: 100%; flex-basis: auto; min-height: 0; padding: 25px 21px; border-radius: 28px; }
+  .review-card { width: 100%; height: auto; flex-basis: auto; min-height: 0; padding: 25px 21px; border-radius: 28px; }
   .review-author { min-height: 0; }
-  .review-details { display: flex; flex-direction: column; }
-  .review-details-content { order: 0; }
+  .review-card blockquote { flex: 0 0 auto; }
+  .review-details { display: flex; flex-direction: column; margin-top: 0; }
+  .review-details-content {
+    order: 0;
+    opacity: 1;
+    transition: grid-template-rows var(--disclosure-duration) var(--disclosure-easing);
+  }
   .review-toggle { order: 1; }
+  .review-details[data-closing="true"] .review-details-content {
+    height: var(--review-close-current-height);
+    grid-template-rows: minmax(0, 1fr);
+    opacity: 1;
+    transition: none;
+  }
+  .review-details[data-closing="true"][data-expanded="false"] .review-details-content {
+    height: 0;
+    grid-template-rows: 0fr;
+  }
+  .review-details[data-closing="true"] .review-read { opacity: 0; transform: translateY(-6px); }
+  .review-details[data-closing="true"] .review-close { opacity: 1; transform: translateY(0); }
+  .review-details[data-closing="true"] .review-close,
+  .review-details[data-closing="true"] .review-expand {
+    transition-duration: 900ms;
+    transition-timing-function: cubic-bezier(.42, 0, .58, 1);
+  }
+  .review-details[data-closing="true"] .review-expand { transform: rotate(0); }
+}
+@media (max-width: 750px) and (prefers-reduced-motion: reduce) {
+  .review-details-content { transition: none; }
 }
 blockquote {
   margin: 0;
@@ -2275,13 +2310,13 @@ footer {
   line-height: 20px;
   font-variant-numeric: tabular-nums;
 }
-/* Relative intervals illustrate overlap, not fixed clinical deadlines. */
+/* The timeline is schematic; staggered card endpoints form a sequence, not deadlines. */
 .process-list > li:nth-child(2) { --start: 7%; --duration: 49%; }
-.process-list > li:nth-child(3) { --start: 16%; --duration: 43%; }
+.process-list > li:nth-child(3) { --start: 16%; --duration: 47%; }
 .process-list > li:nth-child(4) { --start: 24%; --duration: 47%; }
-.process-list > li:nth-child(5) { --start: 30%; --duration: 70%; }
-.process-list > li:nth-child(6) { --start: 36%; --duration: 64%; }
-.process-list > li:nth-child(7) { --start: 44%; --duration: 40%; }
+.process-list > li:nth-child(5) { --start: 30%; --duration: 48%; }
+.process-list > li:nth-child(6) { --start: 36%; --duration: 49%; }
+.process-list > li:nth-child(7) { --start: 44%; --duration: 48%; }
 .process-list > li:nth-child(8) { --start: 50%; --duration: 50%; }
 .process-step {
   position: relative;

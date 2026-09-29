@@ -52,15 +52,115 @@ const ReviewDisclosureContext = createContext(null);
 export function ReviewDetails({ reviewId, intro, children }) {
   const disclosure = useContext(ReviewDisclosureContext);
   const [localOpen, setLocalOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
   const open = disclosure && reviewId ? disclosure.openReviews.has(reviewId) : localOpen;
   const contentId = useId();
+  const toggleButtonRef = useRef(null);
+  const cancelScrollCorrectionRef = useRef(null);
+  useEffect(() => () => cancelScrollCorrectionRef.current?.(), []);
+  useEffect(() => {
+    if (closing) return;
+    const details = toggleButtonRef.current?.closest(".review-details");
+    details?.style.removeProperty("--review-close-current-height");
+  }, [closing]);
+
   const toggle = () => {
+    if (closing) return;
+    cancelScrollCorrectionRef.current?.();
+    cancelScrollCorrectionRef.current = null;
+
+    if (open && window.matchMedia("(max-width: 750px)").matches) {
+      const button = toggleButtonRef.current;
+      const details = button?.closest(".review-details");
+      const content = details?.querySelector(".review-details-content");
+      const contentHeight = content?.getBoundingClientRect().height || 0;
+      const initialButtonTop = button?.getBoundingClientRect().top || 0;
+      const buttonHeight = button?.getBoundingClientRect().height || 54;
+      const scroller = document.scrollingElement || document.documentElement;
+      const initialScrollTop = scroller.scrollTop;
+      const previousOverflowAnchor = scroller.style.getPropertyValue("overflow-anchor");
+      const previousOverflowAnchorPriority = scroller.style.getPropertyPriority("overflow-anchor");
+      const previousScrollBehavior = scroller.style.getPropertyValue("scroll-behavior");
+      const previousScrollBehaviorPriority = scroller.style.getPropertyPriority("scroll-behavior");
+      scroller.style.setProperty("scroll-behavior", "auto", "important");
+      scroller.style.setProperty("overflow-anchor", "none", "important");
+      const targetButtonTop = Math.min(window.innerHeight * 0.48, window.innerHeight - buttonHeight - 16);
+      const requestedScrollTop = initialScrollTop + initialButtonTop - contentHeight - targetButtonTop;
+      const maxScrollTopAfterCollapse = Math.max(0, scroller.scrollHeight - scroller.clientHeight - contentHeight);
+      const finalScrollTop = Math.min(maxScrollTopAfterCollapse, Math.max(0, requestedScrollTop));
+      const scrollDistance = finalScrollTop - initialScrollTop;
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const computedStyle = content ? window.getComputedStyle(content) : null;
+      const durationValue = computedStyle?.transitionDuration.split(",")[0].trim() || "0.65s";
+      const parsedDuration = Number.parseFloat(durationValue) * (durationValue.endsWith("ms") ? 1 : 1000);
+      const duration = Math.max(Number.isFinite(parsedDuration) ? parsedDuration : 650, 900);
+      let frameId;
+      let finished = false;
+      let startTime;
+
+      details?.style.setProperty("--review-close-current-height", `${contentHeight}px`);
+      setClosing(true);
+
+      const restoreScrollStyles = () => {
+        if (previousScrollBehavior) {
+          scroller.style.setProperty("scroll-behavior", previousScrollBehavior, previousScrollBehaviorPriority);
+        } else {
+          scroller.style.removeProperty("scroll-behavior");
+        }
+        if (previousOverflowAnchor) {
+          scroller.style.setProperty("overflow-anchor", previousOverflowAnchor, previousOverflowAnchorPriority);
+        } else {
+          scroller.style.removeProperty("overflow-anchor");
+        }
+      };
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        window.cancelAnimationFrame(frameId);
+        if (disclosure && reviewId) disclosure.toggleReview(reviewId);
+        else setLocalOpen(false);
+        frameId = window.requestAnimationFrame(() => {
+          setClosing(false);
+          frameId = window.requestAnimationFrame(() => {
+            if (button) {
+              const correction = button.getBoundingClientRect().top - targetButtonTop;
+              const maxScrollTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+              scroller.scrollTop = Math.min(maxScrollTop, Math.max(0, scroller.scrollTop + correction));
+            }
+            restoreScrollStyles();
+            cancelScrollCorrectionRef.current = null;
+          });
+        });
+      };
+      const syncScroll = (time) => {
+        if (finished) return;
+        if (startTime == null) startTime = time;
+        const rawProgress = reducedMotion || duration <= 0 ? 1 : Math.min((time - startTime) / duration, 1);
+        const progress = rawProgress * rawProgress * (3 - 2 * rawProgress);
+        const currentHeight = contentHeight * (1 - progress);
+        details?.style.setProperty("--review-close-current-height", `${currentHeight}px`);
+        scroller.scrollTop = initialScrollTop + scrollDistance * progress;
+        if (rawProgress >= 1) finish();
+        else frameId = window.requestAnimationFrame(syncScroll);
+      };
+
+      frameId = window.requestAnimationFrame(syncScroll);
+      cancelScrollCorrectionRef.current = () => {
+        finished = true;
+        window.cancelAnimationFrame(frameId);
+        restoreScrollStyles();
+        details?.style.removeProperty("--review-close-current-height");
+      };
+      return;
+    }
+
+    setClosing(false);
     if (disclosure && reviewId) disclosure.toggleReview(reviewId);
     else setLocalOpen((value) => !value);
   };
 
   return (
-    <div className="review-details" data-expanded={open}>
+    <div className="review-details" data-expanded={open} data-closing={closing}>
       <div className="review-details-content" id={contentId} aria-hidden={!open} inert={!open}>
         <div className="review-details-content-inner">
           <div className="review-details-copy">{intro}{children}</div>
@@ -68,6 +168,7 @@ export function ReviewDetails({ reviewId, intro, children }) {
       </div>
       <button className="review-toggle" type="button" aria-expanded={open} aria-controls={contentId}
         aria-label={open ? "Свернуть отзыв" : "Читать отзыв полностью"}
+        ref={toggleButtonRef}
         onClick={toggle}>
         <span className="review-toggle-label" aria-hidden="true">
           <span className="review-read">Читать отзыв полностью</span>

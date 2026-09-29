@@ -1149,7 +1149,7 @@ main {
 .doctors .photo {
   aspect-ratio: 4/4.4;
   margin-bottom: 25px;
-  border-radius: 18px;
+  border-radius: 0;
 }
 .doctor-caption {
   font-size: 18px;

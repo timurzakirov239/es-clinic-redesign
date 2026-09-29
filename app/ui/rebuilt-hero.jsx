@@ -124,7 +124,7 @@ export function RebuiltHero() {
         <div className={s.mobilePhoto} aria-hidden="true" />
         <div className={s.card}>
           <div className={s.avatars}>
-            {doctors.map((doctor, index) => <a key={doctor} href="#team" aria-label={names[index]} data-doc={index} className={s.avatar}><Image src={`/assets/official-avatar-${doctor}.webp`} width={50} height={50} unoptimized alt="" /></a>)}
+            {doctors.map((doctor, index) => <a key={doctor} href="#team" aria-label={names[index]} data-doc={index} className={s.avatar}><Image src={`/assets/official-avatar-${doctor}.${doctor === "utin" ? "jpg" : "webp"}`} width={50} height={50} unoptimized alt="" /></a>)}
             <a href="#team" aria-label="Вся команда" className={s.more}><Arrow /></a>
           </div>
           <Editable id="rebuilt-team-description">Постоянная медицинская команда, которая берёт заботу о вашем здоровье на себя</Editable>

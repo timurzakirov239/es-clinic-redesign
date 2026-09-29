@@ -346,7 +346,7 @@
 .eyebrow{white-space:normal;}
 .title{margin:0;font-size:32px;font-weight:700;line-height:normal;}
 .card p{white-space:normal;}
-.avatars .avatar[data-doc="2"] img{object-position:center;transform:translateY(-8px) scale(1.3);}
+.avatars .avatar[data-doc="2"] img{object-position:center 60%;transform:none;}
 @media(max-width: 750px){.eyebrow{white-space:pre-line;} .screen h1{margin:0 0 26px;}}
 .screen[data-hero-ready], .header[data-hero-ready]{transition:opacity .18s ease;}
 .screen[data-hero-ready="false"], .header[data-hero-ready="false"]{opacity:0;visibility:hidden;}

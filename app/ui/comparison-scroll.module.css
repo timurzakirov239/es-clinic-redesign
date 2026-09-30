@@ -157,41 +157,7 @@
 .beforeCard p { max-width: 34ch; color: #76695d; font-size: clamp(15px, 1.05vw, 18px); line-height: 1.32; }
 .afterCard p { max-width: 39ch; padding-right: 15px; font-size: clamp(16px, 1.18vw, 21px); line-height: 1.28; letter-spacing: -.018em; }
 
-/* Mobile-only toggle. */
-.compareToggle {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 3;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #2b2115;
-  cursor: pointer;
-}
-
-.compareToggleIcon {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 100%;
-  border: 1px solid rgba(83, 62, 45, 0.18);
-  border-radius: 50%;
-  background: rgba(83, 62, 45, 0.08);
-  font: 22px/1 Arial, sans-serif;
-  transition: transform .35s cubic-bezier(.22, 1, .36, 1), background .3s ease;
-}
-
-.compareToggle:hover .compareToggleIcon { background: rgba(83, 62, 45, 0.14); }
-.pair[data-comparing="true"] .compareToggleIcon { transform: rotate(45deg); }
-.compareToggle:focus-visible { outline: 2px solid #533e2d; outline-offset: 2px; border-radius: 50%; }
-
 @media (min-width: 751px) {
-  .compareToggle { display: none; }
   .pair[data-revealed="true"] .afterCard { transition-delay: 0s; }
 }
 
@@ -216,7 +182,7 @@
     padding-top: 0;
     margin-top: 0;
     animation: none;
-    transition: transform .76s cubic-bezier(.4, 0, .2, 1);
+    transition: none;
   }
 
   /* Tighter gap between the section title and the first pair. */
@@ -228,10 +194,11 @@
      row-gap used between pairs within each group. */
   .lowerCards { margin-top: 22px; }
 
-  /* Stack stays a grid, both cards share the same cell. */
+  /* Reserve both rows before the reveal; the animation never changes their height. */
   .cards > .pair .stack,
   .cards > .pair[data-revealed="true"] .stack {
     display: grid;
+    grid-template-rows: auto auto;
     transform: none;
     transition: none;
   }
@@ -240,30 +207,33 @@
     grid-area: 1 / 1;
     z-index: 0;
     align-self: start;
-    height: var(--before-rest-height, auto);
+    height: auto;
     min-height: 0;
-    padding: 23px 19px 16px;
+    padding: 23px 19px 72px;
     background:
       radial-gradient(circle at 16% -8%, #fffdf0 0%, transparent 44%),
       linear-gradient(145deg, #f2e9dc, #dfd1bf);
-    clip-path: inset(0 0 0 0 round 22px);
+    transform: none;
     transition: none;
   }
 
   /* Reveal: the "after" card slides in from the right. */
   .cards > .pair .afterCard {
-    grid-area: 1 / 1;
+    grid-area: 2 / 1;
     z-index: 1;
-    min-height: 100%;
-    padding: 17px 19px 48px;
+    width: 100%;
+    justify-self: end;
+    min-height: 0;
+    margin-top: -52px;
+    padding: 17px 19px 28px;
     border-color: #fff8e7d9;
     background: linear-gradient(135deg, #fffdf1 0%, #fff8e7 54%, #eadbc9 100%);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateX(28px);
+    transform: translate3d(calc(100% + 32px), 0, 0);
     transition:
-      opacity .76s cubic-bezier(.4, 0, .2, 1),
+      opacity .24s ease,
       transform .76s cubic-bezier(.4, 0, .2, 1),
       visibility 0s linear .76s;
   }
@@ -271,32 +241,11 @@
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
     transition-delay: 0s;
   }
 
-  /* Reveal the self-care card below the stationary clinic card. Its reserved
-     bottom space pushes later rows down instead of making the page jump. */
-  .cards > .pair[data-comparing="true"] {
-    pointer-events: none;
-    padding-bottom: var(--before-flow-space, 0px);
-  }
-  .cards > .pair[data-comparing="true"] .stack {
-    pointer-events: auto;
-  }
-  .cards > .pair[data-comparing="true"] .beforeCard {
-    clip-path: inset(0 0 var(--before-collapse, 0px) 0 round 22px);
-    transform: translateY(var(--before-drop, 0px));
-  }
-  .cards > .pair .beforeCard {
-    transition:
-      clip-path .76s cubic-bezier(.4, 0, .2, 1),
-      transform .76s cubic-bezier(.4, 0, .2, 1);
-  }
-  .cards > .pair[data-reveal-animating] .beforeCard,
-  .cards > .pair[data-reveal-animating] .afterCard {
-    will-change: transform;
-  }
+  .cards > .pair[data-reveal-animating] .afterCard { will-change: transform, opacity; }
   .cards > .pair .afterCard { will-change: auto; }
 
   .cards > .pair .beforeCard .cardHeading,
@@ -338,14 +287,13 @@
     transition: none;
     transform: none;
   }
-  .pair[data-comparing="true"] .beforeCard {
-    transform: translateY(calc(-1 * var(--before-lift, 112px)));
-  }
 }
 
 @media (max-width: 750px) and (prefers-reduced-motion: reduce) {
   .cards > .pair { transition: none; }
-  .pair[data-comparing="true"] .beforeCard {
-    transform: translateY(var(--before-drop, 0px));
+  .cards > .pair .afterCard,
+  .cards > .pair[data-revealed="true"] .afterCard {
+    transform: none;
+    transition: none;
   }
 }

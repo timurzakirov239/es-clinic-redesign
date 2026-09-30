@@ -8,21 +8,15 @@ const DESKTOP_REVEAL_INTERVAL = 700;
 const MOBILE_REVEAL_INTERVAL = 620;
 
 const ScrollPairCard = memo(function ScrollPairCard({
-  item, answer, index, revealed, comparing, onCompareToggle,
+  item, answer, index, revealed,
 }) {
   const pairRef = useRef(null);
-
-  const toggle = (event) => {
-    event.stopPropagation();
-    onCompareToggle(!comparing);
-  };
 
   return (
     <article
       ref={pairRef}
       className={styles.pair}
       data-revealed={revealed}
-      data-comparing={comparing}
       data-comparison-pair
       data-pair-index={index}
       style={{
@@ -56,15 +50,6 @@ const ScrollPairCard = memo(function ScrollPairCard({
             <span>С ЕС Клиникой</span>
           </div>
           <p>{answer}</p>
-          <button
-            type="button"
-            className={styles.compareToggle}
-            aria-label={comparing ? "Свернуть сравнение" : "Показать сравнение"}
-            aria-expanded={comparing}
-            onClick={toggle}
-          >
-            <span className={styles.compareToggleIcon} aria-hidden="true">+</span>
-          </button>
         </div>
       </div>
     </article>
@@ -73,42 +58,13 @@ const ScrollPairCard = memo(function ScrollPairCard({
 
 export function ScrollComparisonReveal({ before, after, heading }) {
   const sceneRef = useRef(null);
-  const flowSnapshotRef = useRef(null);
-  const flowFrameRef = useRef(0);
-  const flowTimersRef = useRef(new Map());
-  const nextSectionAnimationRef = useRef(null);
   const [revealed, setRevealed] = useState(() => new Set());
-  const [activeComparisons, setActiveComparisons] = useState(() => new Set());
   const pairs = useMemo(
     () => before.map((item, index) => ({ item, answer: after[index], index })),
     [after, before],
   );
   const upperPairs = pairs.slice(0, 4);
   const lowerPairs = pairs.slice(4);
-
-  const toggleComparison = (index, opening) => {
-    const root = sceneRef.current;
-    if (root && window.matchMedia("(max-width: 750px)").matches) {
-      const positions = new Map();
-      root.querySelectorAll("[data-comparison-pair]").forEach((pair) => {
-        positions.set(Number(pair.dataset.pairIndex), pair.getBoundingClientRect().top);
-      });
-      const nextSection = root.closest("section")?.nextElementSibling;
-      flowSnapshotRef.current = {
-        index,
-        positions,
-        nextSection,
-        nextSectionTop: nextSection?.getBoundingClientRect().top ?? null,
-      };
-    }
-
-    setActiveComparisons((current) => {
-      const next = new Set(current);
-      if (opening) next.add(index);
-      else next.delete(index);
-      return next;
-    });
-  };
 
   useLayoutEffect(() => {
     const root = sceneRef.current;
@@ -124,38 +80,11 @@ export function ScrollComparisonReveal({ before, after, heading }) {
       measuredWidth = width;
       root.querySelectorAll("[data-comparison-pair]").forEach((pair) => {
         const text = pair.querySelector("[data-before-text]");
-        const afterCard = pair.querySelector("[data-after-card]");
         if (!text) return;
         pair.style.setProperty(
           "--before-lift",
           `${Math.ceil(text.offsetTop + text.offsetHeight + 12)}px`,
         );
-        if (afterCard) {
-          const beforeCard = pair.querySelector("[data-before-card]");
-          const stack = pair.querySelector(`.${styles.stack}`);
-          const beforeStyles = beforeCard ? window.getComputedStyle(beforeCard) : null;
-          const compactHeight = beforeCard && beforeStyles
-            ? Math.ceil(
-                text.offsetTop
-                + text.offsetHeight
-                + Number.parseFloat(beforeStyles.paddingBottom)
-                + Number.parseFloat(beforeStyles.borderBottomWidth),
-              )
-            : 0;
-          const restHeight = Math.max(compactHeight, Math.ceil(afterCard.offsetHeight));
-          const collapse = Math.max(0, restHeight - compactHeight);
-          // Keep a small overlap between the cards while leaving comfortable
-          // space above the "Самостоятельно" label once it slides below.
-          const drop = Math.max(0, Math.ceil(afterCard.offsetHeight - 6));
-          const flowSpace = Math.max(
-            0,
-            Math.ceil(compactHeight + drop - (stack?.offsetHeight ?? 0)),
-          );
-          pair.style.setProperty("--before-rest-height", `${restHeight}px`);
-          pair.style.setProperty("--before-collapse", `${collapse}px`);
-          pair.style.setProperty("--before-drop", `${drop}px`);
-          pair.style.setProperty("--before-flow-space", `${flowSpace}px`);
-        }
       });
     };
     const scheduleMeasure = () => {
@@ -181,82 +110,6 @@ export function ScrollComparisonReveal({ before, after, heading }) {
       window.cancelAnimationFrame(frame);
     };
   }, [before.length]);
-
-  useLayoutEffect(() => {
-    const snapshot = flowSnapshotRef.current;
-    const root = sceneRef.current;
-    if (!snapshot || !root || !window.matchMedia("(max-width: 750px)").matches) return;
-    flowSnapshotRef.current = null;
-
-    const movingPairs = [];
-    root.querySelectorAll("[data-comparison-pair]").forEach((pair) => {
-      const index = Number(pair.dataset.pairIndex);
-      if (index <= snapshot.index) return;
-      const oldTop = snapshot.positions.get(index);
-      if (oldTop == null) return;
-      const offset = oldTop - pair.getBoundingClientRect().top;
-      if (Math.abs(offset) < 0.5) return;
-
-      const oldTimer = flowTimersRef.current.get(pair);
-      if (oldTimer) window.clearTimeout(oldTimer);
-      pair.style.transition = "none";
-      pair.style.transform = `translate3d(0, ${offset}px, 0)`;
-      movingPairs.push(pair);
-    });
-
-    const { nextSection, nextSectionTop } = snapshot;
-    if (nextSection?.isConnected && Number.isFinite(nextSectionTop)) {
-      nextSectionAnimationRef.current?.cancel();
-      nextSectionAnimationRef.current = null;
-      const offset = nextSectionTop - nextSection.getBoundingClientRect().top;
-      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (!reduceMotion && Math.abs(offset) >= 0.5 && typeof nextSection.animate === "function") {
-        const animation = nextSection.animate(
-          [
-            { transform: `translate3d(0, ${offset}px, 0)` },
-            { transform: "translate3d(0, 0, 0)" },
-          ],
-          {
-            duration: 760,
-            easing: "cubic-bezier(.4, 0, .2, 1)",
-          },
-        );
-        nextSectionAnimationRef.current = animation;
-        animation.onfinish = () => {
-          if (nextSectionAnimationRef.current === animation) {
-            nextSectionAnimationRef.current = null;
-          }
-        };
-        animation.oncancel = animation.onfinish;
-      }
-    }
-
-    if (!movingPairs.length) return;
-    // Batch all inverse transforms before forcing one layout read. Reading
-    // each pair separately makes mobile browsers recalculate layout repeatedly.
-    root.getBoundingClientRect();
-    if (flowFrameRef.current) window.cancelAnimationFrame(flowFrameRef.current);
-    flowFrameRef.current = window.requestAnimationFrame(() => {
-      flowFrameRef.current = 0;
-      movingPairs.forEach((pair) => {
-        pair.style.removeProperty("transition");
-        pair.style.transform = "translate3d(0, 0, 0)";
-        const timer = window.setTimeout(() => {
-          pair.style.removeProperty("transform");
-          pair.style.removeProperty("transition");
-          flowTimersRef.current.delete(pair);
-        }, 840);
-        flowTimersRef.current.set(pair, timer);
-      });
-    });
-  }, [activeComparisons]);
-
-  useEffect(() => () => {
-    if (flowFrameRef.current) window.cancelAnimationFrame(flowFrameRef.current);
-    flowTimersRef.current.forEach((timer) => window.clearTimeout(timer));
-    flowTimersRef.current.clear();
-    nextSectionAnimationRef.current?.cancel();
-  }, []);
 
   useEffect(() => {
     const root = sceneRef.current;
@@ -321,20 +174,23 @@ export function ScrollComparisonReveal({ before, after, heading }) {
       observer = new IntersectionObserver((entries) => {
         const entering = entries
           .filter((entry) => {
-            if (entry.isIntersecting) entry.target.setAttribute("data-comparison-visible", "");
-            else entry.target.removeAttribute("data-comparison-visible");
+            const pair = entry.target.closest("[data-comparison-pair]");
+            if (entry.isIntersecting) pair?.setAttribute("data-comparison-visible", "");
+            else pair?.removeAttribute("data-comparison-visible");
             return entry.isIntersecting
               && entry.intersectionRatio >= revealThreshold
-              && entry.target.dataset.revealed !== "true";
+              && pair?.dataset.revealed !== "true";
           })
-          .map((entry) => entry.target);
+          .map((entry) => entry.target.closest("[data-comparison-pair]"))
+          .filter(Boolean);
         if (!entering.length) return;
         queueMobileCards(entering);
       }, {
         threshold: [0, revealThreshold],
         rootMargin: "0px 0px -8% 0px",
       });
-      cards.forEach((card) => observer.observe(card));
+      // Trigger from the self-care card, independent of the answer's text length.
+      cards.forEach((card) => observer.observe(card.querySelector("[data-before-card]") ?? card));
     } else {
       observer = new IntersectionObserver((entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return;
@@ -384,8 +240,6 @@ export function ScrollComparisonReveal({ before, after, heading }) {
                 key={pair.index}
                 {...pair}
                 revealed={revealed.has(pair.index)}
-                comparing={activeComparisons.has(pair.index)}
-                onCompareToggle={(opening) => toggleComparison(pair.index, opening)}
               />
             ))}
           </div>
@@ -397,8 +251,6 @@ export function ScrollComparisonReveal({ before, after, heading }) {
             key={pair.index}
             {...pair}
             revealed={revealed.has(pair.index)}
-            comparing={activeComparisons.has(pair.index)}
-            onCompareToggle={(opening) => toggleComparison(pair.index, opening)}
           />
         ))}
       </div>

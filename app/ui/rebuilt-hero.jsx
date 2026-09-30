@@ -114,7 +114,7 @@ export function RebuiltHero() {
       <div className={s.inner}>
         <div className={s.content}>
           <Editable id="rebuilt-eyebrow" as="div" className={s.eyebrow}>{"Медицинский\nFamily Office"}</Editable>
-          <h1 className={s.title}><Image src="/assets/official-hero-logo.svg" width={1000} height={116} alt="ЕС Клиника" priority /></h1>
+          <h1 className={s.title}><Image src="/assets/official-hero-logo.svg" width={1000} height={116} alt="ЕС Клиника" loading="eager" fetchPriority="high" /></h1>
           <div className={s.tagrow}>
             <div className={s.tagline}><Editable id="rebuilt-tagline-1">Системное управление здоровьем семьи.</Editable><Editable id="rebuilt-tagline-2">Непрерывно. Проактивно. Конфиденциально</Editable></div>
             <ContactButton label="Получить консультацию" hero className={s.cta} />

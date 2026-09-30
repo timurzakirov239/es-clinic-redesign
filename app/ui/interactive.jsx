@@ -97,6 +97,17 @@ export function ReviewDetails({ reviewId, intro, children }) {
       let frameId;
       let finished = false;
       let startTime;
+      let lastScrollTop = initialScrollTop;
+      let previousAutoDistance = 0;
+      let manualScrollOffset = 0;
+
+      // Preserve native scroll between frames, including any movement during final cleanup.
+      const readCurrentScroll = () => {
+        const currentScrollTop = scroller.scrollTop;
+        manualScrollOffset += currentScrollTop - lastScrollTop;
+        lastScrollTop = currentScrollTop;
+        return currentScrollTop;
+      };
 
       details?.style.setProperty("--review-close-current-height", `${contentHeight}px`);
       setClosing(true);
@@ -122,10 +133,12 @@ export function ReviewDetails({ reviewId, intro, children }) {
         frameId = window.requestAnimationFrame(() => {
           setClosing(false);
           frameId = window.requestAnimationFrame(() => {
+            const currentScrollTop = readCurrentScroll();
             if (button) {
-              const correction = button.getBoundingClientRect().top - targetButtonTop;
+              const adjustedButtonTop = targetButtonTop - manualScrollOffset;
+              const correction = button.getBoundingClientRect().top - adjustedButtonTop;
               const maxScrollTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-              scroller.scrollTop = Math.min(maxScrollTop, Math.max(0, scroller.scrollTop + correction));
+              scroller.scrollTop = Math.min(maxScrollTop, Math.max(0, currentScrollTop + correction));
             }
             restoreScrollStyles();
             cancelScrollCorrectionRef.current = null;
@@ -137,9 +150,15 @@ export function ReviewDetails({ reviewId, intro, children }) {
         if (startTime == null) startTime = time;
         const rawProgress = reducedMotion || duration <= 0 ? 1 : Math.min((time - startTime) / duration, 1);
         const progress = rawProgress * rawProgress * (3 - 2 * rawProgress);
+        const currentScrollTop = readCurrentScroll();
+        const autoDistance = scrollDistance * progress;
+        const frameScrollDistance = autoDistance - previousAutoDistance;
         const currentHeight = contentHeight * (1 - progress);
         details?.style.setProperty("--review-close-current-height", `${currentHeight}px`);
-        scroller.scrollTop = initialScrollTop + scrollDistance * progress;
+        // Add only this frame's automatic movement instead of overwriting the user's position.
+        scroller.scrollTop = currentScrollTop + frameScrollDistance;
+        lastScrollTop = scroller.scrollTop;
+        previousAutoDistance = autoDistance;
         if (rawProgress >= 1) finish();
         else frameId = window.requestAnimationFrame(syncScroll);
       };
@@ -658,7 +677,7 @@ export function VideoCard() {
             onClick={enableSound}
             aria-label="Смотреть видео с Дарьей Тишиной"
           >
-            <span aria-hidden="true">▶</span>
+            <span aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M5 3v18l15-9z" /></svg></span>
           </button>
       )}
       <div className={`video-caption${posterVisible ? "" : " is-hidden"}`}>

@@ -643,6 +643,12 @@ main {
   filter: drop-shadow(0 2px 8px #0005);
   transition: opacity .18s ease, transform .18s ease;
 }
+.video-play svg {
+  display: block;
+  width: 29px;
+  height: 29px;
+  fill: currentColor;
+}
 .video-card[data-mode="preview"] .video-play span {
   opacity: 0;
   transform: scale(.85);
@@ -1514,6 +1520,11 @@ blockquote summary {
   overflow: hidden;
   background: #6f6256;
 }
+.prefooter-photo-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
 .prefooter-photo::after {
   content: "";
   position: absolute;
@@ -2206,6 +2217,7 @@ footer {
   }
   .section-heading > img {
     width: 23px;
+    height: auto;
   }
   .hero-logo {
     max-width: 600px;
@@ -2586,7 +2598,7 @@ footer {
     padding-top: 48px;
     padding-bottom: 48px;
   }
-  #history .history-thumbnail { width: clamp(104px, 32vw, 132px); margin-bottom: 24px; }
+  #history .history-thumbnail { display: none; }
   #history .stats { gap: 32px 24px; margin-top: 42px; }
   #history .stats strong { font-size: 38px; }
   #history .stats p { font-size: 17px; }

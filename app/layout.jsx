@@ -60,6 +60,8 @@ const germes = localFont({
     { path: "./fonts/Germes_Bold.otf", weight: "700" },
   ],
   display: "swap",
+  // The first screen uses its own fonts; load these faces when later sections need them.
+  preload: false,
   variable: "--font-germes",
 });
 export const metadata = {

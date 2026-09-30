@@ -477,18 +477,20 @@ export function ScrollVersionLanding() {
       </main>
       <div className="footer-stage">
         <section className="prefooter-photo" aria-label="Здание ЕС Клиники">
-          <Image
-            src="/assets/official-footer-building.webp"
-            alt="Фасад здания ЕС Клиники"
-            fill
-            sizes="100vw"
-            loading="eager"
-            unoptimized
-          />
+          <div className="prefooter-photo-media">
+            <Image
+              src="/assets/official-footer-building.webp"
+              alt="Фасад здания ЕС Клиники"
+              fill
+              sizes="100vw"
+              loading="eager"
+              unoptimized
+            />
+          </div>
         </section>
         <footer id="contacts">
           <div className="footer-brand">
-            <Image src="/assets/official-hero-shield.svg" width={48} height={58} alt="" />
+            <Image src="/assets/official-hero-shield.svg" width={72} height={81} alt="" />
             <strong>ЕС Клиника</strong>
             <span>Основана в 2006 году</span>
           </div>
